@@ -522,9 +522,6 @@
             <a class="nav-link" id="nav-netflix" href="#" aria-label="Trending Netflix"><i class="fab fa-netflix"></i> Trending Netflix</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" id="nav-kdrama" href="#" aria-label="Trending K-Dramas">Trending K-Dramas</a>
-          </li>
-          <li class="nav-item">
             <a class="nav-link" id="nav-favorites" href="#" title="Favorites" aria-label="Favorites"><i class="fas fa-heart"></i> Favorites</a>
           </li>
         </ul>
@@ -748,8 +745,6 @@
         } else {
           url = `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&with_watch_providers=8&watch_region=US&sort_by=popularity.desc&page=${page}`;
         }
-      } else if (currentMode === "kdrama") {
-        url = `https://api.themoviedb.org/3/trending/tv/day?api_key=${apiKey}&page=${page}&language=ko-KR&with_original_language=ko`;
       } else {
         url = `https://api.themoviedb.org/3/trending/movie/day?api_key=${apiKey}&page=${page}`;
       }
@@ -1181,10 +1176,6 @@
         sectionTitle.textContent = `Trending Netflix ${netflixType === "movie" ? "Movies" : "TV Shows"}`;
         categorySearchForm.style.display = 'flex';
         categorySearchInput.placeholder = `Search Trending Netflix ${netflixType === "movie" ? "Movies" : "TV Shows"}...`;
-      } else if (newMode === "kdrama") {
-        sectionTitle.textContent = "Trending K-Dramas";
-        categorySearchForm.style.display = 'flex';
-        categorySearchInput.placeholder = "Search Trending K-Dramas...";
       } else {
         sectionTitle.textContent = "Trending Movies";
         categorySearchForm.style.display = 'flex';
@@ -1206,7 +1197,6 @@
       document.getElementById('nav-anime').classList.remove('active');
       document.getElementById('nav-tagalog').classList.remove('active');
       document.getElementById('nav-netflix').classList.remove('active');
-      document.getElementById('nav-kdrama').classList.remove('active');
       if (mode === "anime") {
         document.getElementById('nav-anime').classList.add('active');
       } else if (mode === "tagalog") {
@@ -1215,8 +1205,6 @@
         document.getElementById('nav-tvshows').classList.add('active');
       } else if (mode === "netflix") {
         document.getElementById('nav-netflix').classList.add('active');
-      } else if (mode === "kdrama") {
-        document.getElementById('nav-kdrama').classList.add('active');
       } else if (mode === "favorites") {
         // handled separately for heart color
       } else {
@@ -1254,7 +1242,6 @@
           };
         }
       };
-      document.getElementById('nav-kdrama').onclick = function(e) { e.preventDefault(); switchMode('kdrama'); };
       const form = document.getElementById('movie-search-form');
       const input = document.getElementById('movie-search-input');
       const sectionTitle = document.getElementById('section-title');
