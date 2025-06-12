@@ -149,6 +149,25 @@
     .favorite-btn:hover, .favorite-btn:focus {
       color: #ff3870 !important;
     }
+    #modal-content-tv .favorite-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.4em;
+      color: #fff !important;
+      cursor: pointer;
+      transition: color 0.15s, text-shadow 0.13s;
+      outline: none;
+      margin: 0.5em 0;
+      display: inline-block;
+    }
+    #modal-content-tv .favorite-btn.favorited {
+      color: #ff3870 !important;
+      text-shadow: 0 0 8px #fff, 0 1px 6px #d23f7a;
+    }
+    #modal-content-tv .favorite-btn:hover,
+    #modal-content-tv .favorite-btn:focus {
+      color: #ff3870 !important;
+    }
     .modal-content {
       background: #23272e !important;
       color: #eee !important;
@@ -466,7 +485,7 @@
       </div>
       <div id="similar-movies" style="padding: 1rem 2rem;"></div>
     </div>
-    <!-- TV Modal Content (hidden unless TV show is shown) -->
+    <!-- TV Modal Content -->
     <div class="modal-content" id="modal-content-tv" style="display:none;">
       <span class="close" onclick="closeTvModal()">×</span>
       <div class="modal-body">
@@ -478,6 +497,9 @@
           <div><strong>First Air Date:</strong> <span id="tv-modal-air-date"></span></div>
           <div><strong>Seasons:</strong> <span id="tv-modal-total-seasons"></span></div>
           <button class="share-btn" id="share-tv-btn" onclick="shareTvShow()" style="margin-bottom:1em;">Share</button>
+          <button class="favorite-btn" id="tv-favorite-btn" title="Add to favorites" aria-label="Add to favorites" tabindex="0">
+            <i class="fas fa-heart"></i>
+          </button>
           <div id="tv-modal-seasons-list"></div>
         </div>
       </div>
@@ -658,29 +680,40 @@
     });
 
     // FAVORITES/RECENTLY VIEWED
-    function isFavorite(id) { return favorites.includes(id); }
-    function toggleFavorite(id) {
-      if (isFavorite(id)) {
-        favorites = favorites.filter(f => f !== id);
+    function isFavorite(id, media_type) {
+      return favorites.some(f => f.id === id && f.media_type === media_type);
+    }
+    function toggleFavorite(id, media_type) {
+      if (isFavorite(id, media_type)) {
+        favorites = favorites.filter(f => f.id !== id || f.media_type !== media_type);
       } else {
-        favorites.push(id);
+        favorites.push({ id, media_type });
       }
       localStorage.setItem('favorites', JSON.stringify(favorites));
       if (currentMode === "favorites") renderFavorites();
+      // Update favorite buttons in movie list
       document.querySelectorAll('.favorite-btn').forEach(btn => {
-        if (btn.closest('.movie-col') && btn.closest('.movie-col').innerHTML.includes(`movie/${id}`)) {
-          if (isFavorite(id)) btn.classList.add('favorited');
+        if (btn.closest('.movie-col') && btn.closest('.movie-col').innerHTML.includes(`${media_type}/${id}`)) {
+          if (isFavorite(id, media_type)) btn.classList.add('favorited');
           else btn.classList.remove('favorited');
         }
       });
+      // Update favorite button in TV modal
+      const tvFavoriteBtn = document.getElementById('tv-favorite-btn');
+      if (tvFavoriteBtn && tvModalData.tvId === id && media_type === 'tv') {
+        if (isFavorite(id, 'tv')) tvFavoriteBtn.classList.add('favorited');
+        else tvFavoriteBtn.classList.remove('favorited');
+      }
     }
     function renderFavorites() {
       if (!favorites.length) {
-        document.getElementById('movie-list').innerHTML = `<div class="empty-state">You have no favorite movies yet ❤️.</div>`;
+        document.getElementById('movie-list').innerHTML = `<div class="empty-state">You have no favorite movies or TV shows yet ❤️.</div>`;
         return;
       }
-      Promise.all(favorites.map(id =>
-        fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}`).then(r => r.json())
+      Promise.all(favorites.map(item =>
+        fetch(`https://api.themoviedb.org/3/${item.media_type}/${item.id}?api_key=${apiKey}`)
+          .then(r => r.json())
+          .then(data => ({ ...data, media_type: item.media_type }))
       )).then(arr => {
         categoryItems = arr.filter(m => m && m.id); // Store for category search
         renderMovies(categoryItems, true);
@@ -691,7 +724,7 @@
     }
     let recentlyViewed = JSON.parse(localStorage.getItem("recently_viewed") || "[]");
     function addRecentlyViewed(item) {
-      const isTv = !!item.name && !item.title;
+      const isTv = !!item.name && !item.title || item.media_type === 'tv';
       recentlyViewed = recentlyViewed.filter(m => m.id !== item.id || m.media_type !== (isTv ? 'tv' : 'movie'));
       recentlyViewed.unshift({ 
         id: item.id, 
@@ -781,6 +814,7 @@
       }
       items.forEach(item => {
         const isTv = item.media_type === 'tv' || !!item.name && !item.title;
+        const mediaType = isTv ? 'tv' : 'movie';
         const movieDiv = document.createElement('div');
         movieDiv.className = 'movie-col';
         movieDiv.innerHTML = `
@@ -789,8 +823,9 @@
             <button class="play-btn-centered" type="button" title="${isTv ? "View TV Show" : "Play Movie"}">
               <i class="fas fa-${isTv ? "tv" : "play"}"></i>
             </button>
-            ${!isTv ? `<button class="favorite-btn${isFavorite(item.id) ? ' favorited' : ''}" title="Add to favorites" aria-label="Add to favorites" tabindex="0">
-              <i class="fas fa-heart"></i></button>` : ''}
+            <button class="favorite-btn${isFavorite(item.id, mediaType) ? ' favorited' : ''}" title="Add to favorites" aria-label="Add to favorites" tabindex="0">
+              <i class="fas fa-heart"></i>
+            </button>
           </div>
           <div class="movie-metadata">
             <span class="movie-title" title="${isTv ? item.name : item.title}">${isTv ? item.name : item.title}</span>
@@ -799,12 +834,10 @@
           </div>
         `;
         movieDiv.querySelector('.play-btn-centered').onclick = () => { isTv ? showTvDetails(item) : showDetails(item); };
-        if (!isTv) {
-          movieDiv.querySelector('.favorite-btn').onclick = (e) => {
-            e.stopPropagation();
-            toggleFavorite(item.id);
-          };
-        }
+        movieDiv.querySelector('.favorite-btn').onclick = (e) => {
+          e.stopPropagation();
+          toggleFavorite(item.id, mediaType);
+        };
         container.appendChild(movieDiv);
       });
     }
@@ -1035,6 +1068,14 @@
       document.getElementById('tv-episode-player').style.display = "none";
       document.getElementById('tv-episode-player').src = "";
       document.getElementById('tv-episode-next-btn').style.display = "none";
+      // Set favorite button state
+      const tvFavoriteBtn = document.getElementById('tv-favorite-btn');
+      if (isFavorite(tvInfo.id, 'tv')) {
+        tvFavoriteBtn.classList.add('favorited');
+      } else {
+        tvFavoriteBtn.classList.remove('favorited');
+      }
+      tvFavoriteBtn.onclick = () => toggleFavorite(tvInfo.id, 'tv');
       for (const season of tvInfo.seasons) {
         const seasonDiv = document.createElement("div");
         seasonDiv.className = "season-block";
@@ -1076,6 +1117,10 @@
       iframe.src = `https://player.videasy.net/tv/${tvId}/${seasonNum}/${episodeNum}?autoplay=1`;
       tvModalData.season = parseInt(seasonNum);
       tvModalData.episode = parseInt(episodeNum);
+      // Fetch TV show details to add to recently viewed
+      fetch(`https://api.themoviedb.org/3/tv/${tvId}?api_key=${apiKey}`)
+        .then(r => r.json())
+        .then(data => addRecentlyViewed({ ...data, media_type: 'tv' }));
       setTimeout(() => {
         iframe.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 250);
@@ -1161,10 +1206,10 @@
         categorySearchForm.style.display = 'flex';
         categorySearchInput.placeholder = "Search Trending Tagalog Movies...";
       } else if (newMode === "favorites") {
-        sectionTitle.textContent = "Your Favorite Movies";
+        sectionTitle.textContent = "Your Favorite Movies & TV Shows";
         document.getElementById('nav-favorites').classList.add('favorited');
         categorySearchForm.style.display = 'flex';
-        categorySearchInput.placeholder = "Search Your Favorite Movies...";
+        categorySearchInput.placeholder = "Search Your Favorite Movies & TV Shows...";
       } else if (newMode === "tv") {
         sectionTitle.textContent = "Trending TV Shows";
         categorySearchForm.style.display = 'flex';
@@ -1194,7 +1239,7 @@
       document.getElementById('nav-tagalog').classList.remove('active');
       document.getElementById('nav-netflix').classList.remove('active');
       if (mode === "anime") {
-        document.getElementById('nav-anime').classList.add('active');
+        document.getElementById('nav-anime'). standpoint.add('active');
       } else if (mode === "tagalog") {
         document.getElementById('nav-tagalog').classList.add('active');
       } else if (mode === "tv") {
