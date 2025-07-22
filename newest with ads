@@ -429,7 +429,9 @@
       width: 100%;
       max-width: 600px;
       margin: 0 auto;
-      display: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     #genre-filter-form select {
       background: #1a1f25;
@@ -442,6 +444,23 @@
     #genre-filter-form select:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+    #genre-filter:focus {
+      outline: 2px solid #2196f3;
+      outline-offset: 2px;
+    }
+    #clear-genre-btn {
+      padding: 0.5rem 1rem;
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.17s;
+    }
+    #clear-genre-btn:hover, #clear-genre-btn:focus {
+      background: #2196f3;
+      outline: none;
     }
     #back-to-top {
       position: fixed;
@@ -552,7 +571,10 @@
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav ml-auto mb-2 mb-lg-0" id="movie-nav">
           <li class="nav-item">
-            <a class="nav-link nav-link-1 active" id="nav-movies" href="#" aria-label="Trending Movies">Trending Movies</a>
+            <a class="nav-link nav-link-1 active" id="nav-home" href="#" aria-label="Home"><i class="fas fa-home"></i> Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="nav-movies" href="#" aria-label="Trending Movies">Trending Movies</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" id="nav-tvshows" href="#" aria-label="Trending TV Shows">Trending TV Shows</a>
@@ -593,10 +615,11 @@
       <div class="col-6 d-flex justify-content-end align-items-center"></div>
     </div>
     <div class="row mb-4">
-      <form class="genre-filter-form" id="genre-filter-form" style="width: 100%; max-width: 600px; margin: 0 auto; display: none;">
-        <select id="genre-filter" aria-label="Filter by genre">
-          <option value="">All Genres</option>
+      <form class="genre-filter-form" id="genre-filter-form">
+        <select id="genre-filter" aria-label="Filter movies by genre" role="listbox" disabled>
+          <option value="" id="genre-all">Loading genres...</option>
         </select>
+        <button type="button" id="clear-genre-btn" class="btn btn-outline-primary" style="padding: 0.5rem 1rem;">Clear</button>
       </form>
     </div>
     <div class="row tm-mb-90 flex-wrap" id="movie-list" style="margin-left: 0; margin-right: 0;"></div>
@@ -729,7 +752,7 @@
       setTimeout(() => errorMsg.remove(), 5000);
     }
 
-    // Fetch genres
+    // Fetch genres (UNCHANGED)
     async function fetchGenres() {
       try {
         const [movieRes, tvRes] = await Promise.all([
@@ -742,15 +765,17 @@
         movieGenres = movieData.genres || [];
         tvGenres = tvData.genres || [];
         populateGenreFilter();
+        genreFilter.disabled = false; // Enable after loading
       } catch (e) {
         console.error('Error fetching genres:', e);
-        genreFilter.innerHTML = '<option value="">Failed to load genres</option>';
+        genreFilter.innerHTML = '<option value="" id="genre-all">Failed to load genres</option>';
+        genreFilter.disabled = false;
       }
     }
 
     // Populate genre filter dropdown
     function populateGenreFilter() {
-      genreFilter.innerHTML = '<option value="">All Genres</option>';
+      genreFilter.innerHTML = '<option value="" id="genre-all">All Genres</option>';
       let genres = [];
       if (currentMode === "tv") {
         genres = tvGenres;
@@ -763,13 +788,15 @@
       } else {
         genres = movieGenres;
       }
-      genres.forEach(genre => {
+      genres.forEach((genre, index) => {
         const option = document.createElement('option');
         option.value = genre.id;
+        option.id = `genre-${index}`;
         option.textContent = genre.name;
         genreFilter.appendChild(option);
       });
       genreFilter.value = currentGenre || "";
+      genreFilter.setAttribute('aria-activedescendant', genreFilter.options[genreFilter.selectedIndex].id || '');
     }
 
     // FAVORITES/RECENTLY VIEWED
@@ -868,7 +895,7 @@
       });
     }
 
-    // FETCH & RENDER
+    // Fetch & Render (UNCHANGED)
     async function fetchMoviesInf(page = 1) {
       if (loadedPages.has(page) || page > maxPages) return [];
       let url = "";
@@ -1324,6 +1351,7 @@
       }
     }
     function setActiveNav(mode) {
+      document.getElementById('nav-home').classList.remove('active');
       document.getElementById('nav-movies').classList.remove('active');
       document.getElementById('nav-tvshows').classList.remove('active');
       document.getElementById('nav-anime').classList.remove('active');
@@ -1340,6 +1368,7 @@
       } else if (mode === "favorites") {
         // handled separately for heart color
       } else {
+        document.getElementById('nav-home').classList.add('active');
         document.getElementById('nav-movies').classList.add('active');
       }
     }
@@ -1364,6 +1393,12 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
 
+      document.getElementById('nav-home').onclick = function(e) {
+        e.preventDefault();
+        switchMode('popular');
+        document.getElementById('movie-search-input').value = '';
+        document.getElementById('genre-filter').value = '';
+      };
       document.getElementById('nav-movies').onclick = function(e) { e.preventDefault(); switchMode('popular'); };
       document.getElementById('nav-tvshows').onclick = function(e) { e.preventDefault(); switchMode('tv'); };
       document.getElementById('nav-anime').onclick = function(e) { e.preventDefault(); switchMode('anime'); };
@@ -1427,9 +1462,22 @@
               )
             : categoryItems;
           renderMovies(filteredItems, true);
+          genreFilter.focus();
+        } else {
+          resetInfiniteScroll();
+          genreFilter.focus();
+        }
+        genreFilter.setAttribute('aria-activedescendant', genreFilter.options[genreFilter.selectedIndex].id || '');
+      };
+      document.getElementById('clear-genre-btn').onclick = function() {
+        genreFilter.value = "";
+        currentGenre = "";
+        if (currentMode === "favorites") {
+          renderFavorites();
         } else {
           resetInfiniteScroll();
         }
+        genreFilter.focus();
       };
       renderRecentlyViewed();
       resetInfiniteScroll();
