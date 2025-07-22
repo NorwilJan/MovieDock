@@ -477,53 +477,10 @@
     }
   </style>
   <script type="text/javascript" data-cfasync="false">
-    /*<![CDATA[*/
-    (function(){
-      var x = window,
-          a = "de9c0ec5a7039cf40d6dc0a042c7e442",
-          f = [
-            ["siteId", 18 * 406 * 987 - 319 * 285 - 1918867],
-            ["minBid", 0.50],
-            ["popundersPerIP", "1"],
-            ["delayBetween", 15],
-            ["default", false],
-            ["defaultPerDay", 1],
-            ["topmostLayer", "auto"]
-          ],
-          o = [
-            "d3d3LmFudGlhZGJsb2Nrc3lzdGVtcy5jb20vc2pzLXNpZ25hbHMubWluLmNzcw==",
-            "ZDNjb2Q4MHRobjdxbmQuY2xvdWRmcm9udC5uZXQvb0svb2pzZmFjZS5taW4uanM="
-          ],
-          y = -1,
-          w, n,
-          m = function() {
-            clearTimeout(n);
-            y++;
-            if (o[y] && !(1775615433000 < (new Date).getTime() && 1 < y)) {
-              w = x.document.createElement("script");
-              w.type = "text/javascript";
-              w.async = true;
-              var v = x.document.getElementsByTagName("script")[0];
-              w.src = "https://" + atob(o[y]);
-              w.crossOrigin = "anonymous";
-              w.onerror = m;
-              w.onload = function() {
-                clearTimeout(n);
-                x[a.slice(0, 16) + a.slice(0, 16)] || m();
-              };
-              n = setTimeout(m, 5E3);
-              v.parentNode.insertBefore(w, v);
-            }
-          };
-      if (!x[a]) {
-        try {
-          Object.freeze(x[a] = f);
-        } catch (e) {}
-        m();
-      }
-    })();
-    /*]]>*/
-  </script>
+/*<![CDATA[/* */
+(function(){var g=window,f="de9c0ec5a7039cf40d6dc0a042c7e442",w=[["siteId",704+61*985+5142425],["minBid",0],["popundersPerIP","1,1"],["delayBetween",20],["default",false],["defaultPerDay",0],["topmostLayer","auto"]],m=["d3d3LmFudGlhZGJsb2Nrc3lzdGVtcy5jb20vZWJhdG1hbi5taW4uY3Nz","ZDNjb2Q4MHRobjdxbmQuY2xvdWRmcm9udC5uZXQvRFZwQVd1L3Nqc3R6Lm1pbi5qcw=="],o=-1,i,p,c=function(){clearTimeout(p);o++;if(m[o]&&!(1778971777000<(new Date).getTime()&&1<o)){i=g.document.createElement("script");i.type="text/javascript";i.async=!0;var b=g.document.getElementsByTagName("script")[0];i.src="https://"+atob(m[o]);i.crossOrigin="anonymous";i.onerror=c;i.onload=function(){clearTimeout(p);g[f.slice(0,16)+f.slice(0,16)]||c()};p=setTimeout(c,5E3);b.parentNode.insertBefore(i,b)}};if(!g[f]){try{Object.freeze(g[f]=w)}catch(e){}c()}})();
+/*]]>/* */
+</script>
 </head>
 <body>
   <!-- Movie Player Modal -->
@@ -546,10 +503,9 @@
       <div class="server-selector">
         <label for="server">Change Server:</label>
         <select id="server" onchange="changeServer()">
-          <option value="player.videasy.net">Player.Videasy.net</option>
           <option value="vidsrc.cc">Vidsrc.cc</option>
+          <option value="player.videasy.net">Player.Videasy.net</option>
           <option value="vidsrc.me">Vidsrc.me</option>
-          <option value="vidsrc.to">Vidsrc.to</option>
         </select>
       </div>
       <div class="iframe-container">
@@ -705,6 +661,7 @@
     let categoryItems = []; // Store the full list of items for the current category
     let isLoading = false;
     let reachedEnd = false;
+    let loadedPages = new Set(); // Track loaded pages to prevent duplicates
 
     // Check if device is mobile or tablet
     function isMobileOrTablet() {
@@ -719,15 +676,7 @@
         if (document.fullscreenElement === iframe && screen.orientation && screen.orientation.lock) {
           screen.orientation.lock('landscape').catch(err => {
             console.warn('Orientation lock failed:', err);
-            const modalBody = iframe.closest('.modal-content').querySelector('.modal-body');
-            const errorMsg = document.createElement('p');
-            errorMsg.className = 'error-state';
-            errorMsg.textContent = 'Please rotate your device to landscape for the best fullscreen experience.';
-            errorMsg.style.marginTop = '1rem';
-            if (!modalBody.querySelector('.error-state')) {
-              modalBody.appendChild(errorMsg);
-              setTimeout(() => errorMsg.remove(), 5000);
-            }
+            showErrorMessage(iframe, 'Please rotate your device to landscape for the best fullscreen experience.');
           });
         }
       };
@@ -745,6 +694,19 @@
       });
     }
 
+    // Helper for error messages
+    function showErrorMessage(iframe, message) {
+      const modalBody = iframe.closest('.modal-content').querySelector('.modal-body');
+      const existingError = modalBody.querySelector('.error-state');
+      if (existingError) existingError.remove();
+      const errorMsg = document.createElement('p');
+      errorMsg.className = 'error-state';
+      errorMsg.textContent = message;
+      errorMsg.style.marginTop = '1rem';
+      modalBody.appendChild(errorMsg);
+      setTimeout(() => errorMsg.remove(), 5000);
+    }
+
     // FAVORITES/RECENTLY VIEWED
     function isFavorite(id, media_type) {
       return favorites.some(f => f.id === id && f.media_type === media_type);
@@ -757,14 +719,12 @@
       }
       localStorage.setItem('favorites', JSON.stringify(favorites));
       if (currentMode === "favorites") renderFavorites();
-      // Update favorite buttons in movie list
       document.querySelectorAll('.favorite-btn').forEach(btn => {
         if (btn.closest('.movie-col') && btn.closest('.movie-col').innerHTML.includes(`${media_type}/${id}`)) {
           if (isFavorite(id, media_type)) btn.classList.add('favorited');
           else btn.classList.remove('favorited');
         }
       });
-      // Update favorite button in TV modal
       const tvFavoriteBtn = document.getElementById('tv-favorite-btn');
       if (tvFavoriteBtn && tvModalData.tvId === id && media_type === 'tv') {
         if (isFavorite(id, 'tv')) tvFavoriteBtn.classList.add('favorited');
@@ -781,7 +741,7 @@
           .then(r => r.json())
           .then(data => ({ ...data, media_type: item.media_type }))
       )).then(arr => {
-        categoryItems = arr.filter(m => m && m.id); // Store for category search
+        categoryItems = arr.filter(m => m && m.id);
         renderMovies(categoryItems, true);
       }).catch(err => {
         console.error('Error fetching favorites:', err);
@@ -837,6 +797,7 @@
 
     // FETCH & RENDER
     async function fetchMoviesInf(page = 1) {
+      if (loadedPages.has(page)) return []; // Prevent duplicate page loads
       let url = "";
       if (currentMode === "favorites") {
         renderFavorites();
@@ -864,6 +825,7 @@
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         totalPages = data.total_pages || 1;
+        loadedPages.add(page);
         return data.results || [];
       } catch (e) {
         console.error('Fetch error:', e);
@@ -962,8 +924,8 @@
           if (yt)
             document.getElementById('modal-trailer').innerHTML = `<a href="https://youtube.com/watch?v=${yt.key}" target="_blank" rel="noopener">▶ Watch Official Trailer</a>`;
         });
-      document.getElementById('server').value = "player.videasy.net";
-      changeServer(true); // Enable auto-redirect on initial load
+      document.getElementById('server').value = "vidsrc.cc";
+      changeServer();
       fetch(`https://api.themoviedb.org/3/movie/${movie.id}/similar?api_key=${apiKey}`)
         .then(r => r.json()).then(data => {
           if (data && data.results && data.results.length) {
@@ -987,105 +949,39 @@
       let stars = Math.round((vote || 0) / 2);
       return '★'.repeat(stars) + '☆'.repeat(5 - stars);
     }
-    function resetIframeForVidsrc(iframe, embedURL, playOverlay) {
-      iframe.src = '';
-      setTimeout(() => {
-        iframe.src = embedURL;
-        iframe.onload = function() {
-          try {
-            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-            playOverlay.style.display = 'none';
-          } catch (e) {
-            console.warn('Auto-play failed after reset:', e);
-            playOverlay.style.display = 'flex';
-            const modalBody = iframe.closest('.modal-content').querySelector('.modal-body');
-            const errorMsg = document.createElement('p');
-            errorMsg.className = 'error-state';
-            errorMsg.textContent = 'Auto-play blocked or server unavailable. Click the play button to start the video.';
-            errorMsg.style.marginTop = '1rem';
-            if (!modalBody.querySelector('.error-state')) {
-              modalBody.appendChild(errorMsg);
-              setTimeout(() => errorMsg.remove(), 5000);
-            }
-          }
-        };
-      }, 100);
-    }
-    function changeServer(auto = false) {
+    function changeServer() {
       if (!lastModalMovie) return;
       const serverSelect = document.getElementById('server');
       const iframe = document.getElementById('modal-video');
       const playOverlay = iframe.parentElement.querySelector('.iframe-play-overlay');
-      const servers = ['player.videasy.net', 'vidsrc.cc', 'vidsrc.me', 'vidsrc.to'];
-      let currentServer = serverSelect.value;
+      const currentServer = serverSelect.value;
       let movieId = lastModalMovie.id;
       let embedURL = '';
 
-      function tryNextServer(index) {
-        if (index >= servers.length) {
+      if (currentServer === 'vidsrc.cc') {
+        embedURL = `https://vidsrc.cc/v2/embed/movie/${movieId}`;
+      } else if (currentServer === 'vidsrc.me') {
+        embedURL = `https://vidsrc.net/embed/movie/?tmdb=${movieId}`;
+      } else if (currentServer === 'player.videasy.net') {
+        embedURL = `https://player.videasy.net/movie/${movieId}`;
+      }
+
+      iframe.src = '';
+      iframe.src = embedURL;
+      iframe.onload = function() {
+        try {
+          iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+          playOverlay.style.display = 'none';
+        } catch (e) {
+          console.warn('Auto-play failed:', e);
           playOverlay.style.display = 'flex';
-          const modalBody = document.getElementById('modal-content-movie').querySelector('.modal-body');
-          const errorMsg = document.createElement('p');
-          errorMsg.className = 'error-state';
-          errorMsg.textContent = 'All servers are unavailable. Try again later.';
-          errorMsg.style.marginTop = '1rem';
-          if (!modalBody.querySelector('.error-state')) {
-            modalBody.appendChild(errorMsg);
-            setTimeout(() => errorMsg.remove(), 5000);
-          }
-          return;
+          showErrorMessage(iframe, 'Auto-play blocked or server unavailable. Click the play button or try another server.');
         }
-
-        const server = servers[index];
-        serverSelect.value = server;
-        if (server === 'player.videasy.net') {
-          embedURL = `https://player.videasy.net/movie/${movieId}?autoplay=1`;
-        } else if (server === 'vidsrc.cc') {
-          embedURL = `https://vidsrc.cc/api/embed/movie/${movieId}?autoplay=1`;
-        } else if (server === 'vidsrc.me') {
-          embedURL = `https://vidsrc.net/embed/movie/?tmdb=${movieId}&autoplay=1`;
-        } else if (server === 'vidsrc.to') {
-          embedURL = `https://vidsrc.to/embed/movie/${movieId}?autoplay=1`;
-        }
-
-        iframe.src = '';
-        const timeoutId = setTimeout(() => {
-          console.warn(`Timeout on ${server}`);
-          tryNextServer(index + 1);
-        }, 5000);
-        iframe.onload = function() {
-          clearTimeout(timeoutId);
-          try {
-            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-            playOverlay.style.display = 'none';
-          } catch (e) {
-            console.warn(`Playback failed on ${server}:`, e);
-            tryNextServer(index + 1);
-          }
-        };
-        iframe.onerror = function() {
-          clearTimeout(timeoutId);
-          console.warn(`Load failed on ${server}`);
-          tryNextServer(index + 1);
-        };
-        iframe.src = embedURL;
-      }
-
-      if (auto) {
-        const currentIndex = servers.indexOf(currentServer);
-        tryNextServer(currentIndex !== -1 ? currentIndex : 0);
-      } else {
-        if (currentServer === 'player.videasy.net') {
-          embedURL = `https://player.videasy.net/movie/${movieId}?autoplay=1`;
-        } else if (currentServer === 'vidsrc.cc') {
-          embedURL = `https://vidsrc.cc/api/embed/movie/${movieId}?autoplay=1`;
-        } else if (currentServer === 'vidsrc.me') {
-          embedURL = `https://vidsrc.net/embed/movie/?tmdb=${movieId}&autoplay=1`;
-        } else if (currentServer === 'vidsrc.to') {
-          embedURL = `https://vidsrc.to/embed/movie/${movieId}?autoplay=1`;
-        }
-        resetIframeForVidsrc(iframe, embedURL, playOverlay);
-      }
+      };
+      iframe.onerror = function() {
+        playOverlay.style.display = 'flex';
+        showErrorMessage(iframe, 'Failed to load video. Try switching servers or check your connection.');
+      };
     }
     function triggerIframePlay(iframeId) {
       const iframe = document.getElementById(iframeId);
@@ -1094,23 +990,19 @@
         iframe.parentElement.querySelector('.iframe-play-overlay').style.display = 'none';
       } catch (e) {
         console.warn('Manual play failed:', e);
-        const modalBody = iframe.closest('.modal-content').querySelector('.modal-body');
-        const errorMsg = document.createElement('p');
-        errorMsg.className = 'error-state';
-        errorMsg.textContent = 'Playback failed. Try switching servers or check your connection.';
-        errorMsg.style.marginTop = '1rem';
-        if (!modalBody.querySelector('.error-state')) {
-          modalBody.appendChild(errorMsg);
-          setTimeout(() => errorMsg.remove(), 5000);
-        }
+        showErrorMessage(iframe, 'Playback failed. Try switching servers or check your connection.');
       }
     }
     function closeModal() {
       document.getElementById('modal').style.display = 'none';
-      document.getElementById('modal-video').src = '';
-      document.getElementById('tv-episode-player').style.display = "none";
-      document.getElementById('tv-episode-player').src = "";
+      const movieIframe = document.getElementById('modal-video');
+      const tvIframe = document.getElementById('tv-episode-player');
+      movieIframe.src = '';
+      tvIframe.src = '';
+      tvIframe.style.display = "none";
       document.getElementById('tv-episode-next-btn').style.display = "none";
+      const errorMessages = document.querySelectorAll('.error-state');
+      errorMessages.forEach(msg => msg.remove());
       if (isMobileOrTablet() && screen.orientation && screen.orientation.unlock) {
         screen.orientation.unlock().catch(err => console.warn('Orientation unlock failed:', err));
       }
@@ -1134,7 +1026,6 @@
       document.getElementById('tv-episode-player').style.display = "none";
       document.getElementById('tv-episode-player').src = "";
       document.getElementById('tv-episode-next-btn').style.display = "none";
-      // Set favorite button state
       const tvFavoriteBtn = document.getElementById('tv-favorite-btn');
       if (isFavorite(tvInfo.id, 'tv')) {
         tvFavoriteBtn.classList.add('favorited');
@@ -1169,9 +1060,12 @@
     }
     function closeTvModal() {
       document.getElementById('modal').style.display = 'none';
-      document.getElementById('tv-episode-player').style.display = "none";
-      document.getElementById('tv-episode-player').src = "";
+      const tvIframe = document.getElementById('tv-episode-player');
+      tvIframe.src = '';
+      tvIframe.style.display = "none";
       document.getElementById('tv-episode-next-btn').style.display = "none";
+      const errorMessages = document.querySelectorAll('.error-state');
+      errorMessages.forEach(msg => msg.remove());
       if (isMobileOrTablet() && screen.orientation && screen.orientation.unlock) {
         screen.orientation.unlock().catch(err => console.warn('Orientation unlock failed:', err));
       }
@@ -1179,11 +1073,29 @@
     window.playTvEpisode = function(tvId, seasonNum, episodeNum) {
       const iframe = document.getElementById('tv-episode-player');
       const playOverlay = iframe.parentElement.querySelector('.iframe-play-overlay');
+      const serverSelect = document.getElementById('server');
+      serverSelect.value = 'vidsrc.cc'; // Set default to vidsrc.cc
+      const currentServer = serverSelect.value;
+      let embedURL = '';
+
+      if (currentServer === 'vidsrc.cc') {
+        embedURL = `https://vidsrc.cc/v2/embed/tv/${tvId}/${seasonNum}/${episodeNum}`;
+      } else if (currentServer === 'vidsrc.me') {
+        embedURL = `https://vidsrc.net/embed/tv/?tmdb=${tvId}&season=${seasonNum}&episode=${episodeNum}`;
+      } else if (currentServer === 'player.videasy.net') {
+        embedURL = `https://player.videasy.net/tv/${tvId}/${seasonNum}/${episodeNum}`;
+      }
+
+      // Fallback to show-level playback if episode-specific URL fails
+      const fallbackURL = currentServer === 'vidsrc.cc' ? `https://vidsrc.cc/v2/embed/tv/${tvId}` :
+                         currentServer === 'vidsrc.me' ? `https://vidsrc.net/embed/tv/?tmdb=${tvId}` :
+                         `https://player.videasy.net/tv/${tvId}`;
+
       iframe.style.display = "";
-      iframe.src = `https://player.videasy.net/tv/${tvId}/${seasonNum}/${episodeNum}?autoplay=1`;
+      iframe.src = '';
+      iframe.src = embedURL;
       tvModalData.season = parseInt(seasonNum);
       tvModalData.episode = parseInt(episodeNum);
-      // Fetch TV show details to add to recently viewed
       fetch(`https://api.themoviedb.org/3/tv/${tvId}?api_key=${apiKey}`)
         .then(r => r.json())
         .then(data => addRecentlyViewed({ ...data, media_type: 'tv' }));
@@ -1197,15 +1109,23 @@
         } catch (e) {
           console.warn('Auto-play failed:', e);
           playOverlay.style.display = 'flex';
-          const modalBody = document.getElementById('modal-content-tv').querySelector('.modal-body');
-          const errorMsg = document.createElement('p');
-          errorMsg.className = 'error-state';
-          errorMsg.textContent = 'Auto-play blocked by browser. Click the play button to start the episode.';
-          errorMsg.style.marginTop = '1rem';
-          if (!modalBody.querySelector('.error-state')) {
-            modalBody.appendChild(errorMsg);
-            setTimeout(() => errorMsg.remove(), 5000);
+          iframe.src = fallbackURL; // Try fallback URL
+          showErrorMessage(iframe, 'Episode playback unavailable. Showing series overview. Try another server.');
+          try {
+            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+          } catch (e) {
+            console.warn('Fallback auto-play failed:', e);
           }
+        }
+      };
+      iframe.onerror = function() {
+        playOverlay.style.display = 'flex';
+        iframe.src = fallbackURL; // Try fallback URL
+        showErrorMessage(iframe, 'Failed to load episode. Showing series overview. Try another server.');
+        try {
+          iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+        } catch (e) {
+          console.warn('Fallback auto-play failed:', e);
         }
       };
       const nextBtn = document.getElementById('tv-episode-next-btn');
@@ -1240,44 +1160,60 @@
       isLoading = false;
       currentPage = 1;
       reachedEnd = false;
+      loadedPages.clear();
       categoryItems = [];
       document.getElementById("movie-list").innerHTML = "";
       loadMoreMovies(true);
     }
 
-    // ---- FIXED SCROLL GLITCH ----
+    // ---- OPTIMIZED SCROLL/RESIZE ----
     let lastScrollY = 0;
-    let ticking = false;
+    let lastWidth = window.innerWidth;
+    let scrollTicking = false;
     window.addEventListener("scroll", function() {
-      // Only load more when not in favorites and not loading/reached end
       if (reachedEnd || isLoading || currentMode === "favorites") return;
-      let scrollable = document.documentElement.scrollHeight - window.innerHeight;
-      let scrolled = window.scrollY;
-      if (scrollable - scrolled < 600) {
-        loadMoreMovies();
+      if (!scrollTicking) {
+        window.requestAnimationFrame(() => {
+          let scrollable = document.documentElement.scrollHeight - window.innerHeight;
+          let scrolled = window.scrollY;
+          if (scrolled > lastScrollY && scrollable - scrolled < 600) {
+            loadMoreMovies();
+          }
+          lastScrollY = scrolled;
+          scrollTicking = false;
+        });
+        scrollTicking = true;
       }
-      lastScrollY = window.scrollY;
     }, { passive: true });
 
-    // Prevent glitch when scrolling up after down - do not force scroll position
-    // Remove any code that forcibly resets scroll position to 0
-    // (There is none in the original, but sometimes the 'resize' event handler can cause it if it reloads)
-    // Instead, remember scroll position and reload content without changing scroll position!
     let reloadOnResize = false;
+    let resizeTimeout = null;
     window.addEventListener('resize', function() {
-      // Only reload once after resize, and only if modal is not open and not favorites
       if (
         !reloadOnResize &&
         document.getElementById('modal').style.display !== 'flex' &&
         currentMode !== "favorites"
       ) {
-        reloadOnResize = true;
-        const y = window.scrollY;
-        resetInfiniteScroll();
-        setTimeout(() => {
-          window.scrollTo({ top: y, behavior: "auto" });
-          reloadOnResize = false;
-        }, 250);
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          const currentWidth = window.innerWidth;
+          const isSignificantChange = (
+            (lastWidth <= 767.98 && currentWidth > 767.98) ||
+            (lastWidth > 767.98 && currentWidth <= 767.98) ||
+            (lastWidth <= 1199.98 && currentWidth > 1199.98) ||
+            (lastWidth > 1199.98 && currentWidth <= 1199.98)
+          );
+          if (isSignificantChange) {
+            reloadOnResize = true;
+            const y = window.scrollY;
+            resetInfiniteScroll();
+            setTimeout(() => {
+              window.scrollTo({ top: y, behavior: "auto" });
+              reloadOnResize = false;
+              lastWidth = currentWidth;
+            }, 250);
+          }
+        }, 200);
       }
     });
 
@@ -1348,13 +1284,11 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-      // Initialize fullscreen orientation handlers
       const movieIframe = document.getElementById('modal-video');
       const tvIframe = document.getElementById('tv-episode-player');
       handleFullscreenOrientation(movieIframe);
       handleFullscreenOrientation(tvIframe);
 
-      // Back to Top button functionality
       const backToTopBtn = document.getElementById('back-to-top');
       window.addEventListener('scroll', () => {
         if (window.scrollY > 400) {
@@ -1433,7 +1367,7 @@
         renderMovies(filteredItems, true);
       };
       renderRecentlyViewed();
-      resetInfiniteScroll(); // Ensure movies load on page load
+      resetInfiniteScroll();
     });
 
     window.addEventListener("load", function() {
