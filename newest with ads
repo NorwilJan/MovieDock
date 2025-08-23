@@ -517,8 +517,8 @@
       <div class="server-selector">
         <label for="server">Change Server:</label>
         <select id="server" onchange="changeServer()">
+          <option value="player.videasy.net" selected>Player.Videasy.net</option>
           <option value="vidsrc.cc">Vidsrc.cc</option>
-          <option value="player.videasy.net">Player.Videasy.net</option>
           <option value="vidsrc.me">Vidsrc.me</option>
         </select>
       </div>
@@ -752,7 +752,7 @@
       setTimeout(() => errorMsg.remove(), 5000);
     }
 
-    // Fetch genres (UNCHANGED)
+    // Fetch genres
     async function fetchGenres() {
       try {
         const [movieRes, tvRes] = await Promise.all([
@@ -765,7 +765,7 @@
         movieGenres = movieData.genres || [];
         tvGenres = tvData.genres || [];
         populateGenreFilter();
-        genreFilter.disabled = false; // Enable after loading
+        genreFilter.disabled = false;
       } catch (e) {
         console.error('Error fetching genres:', e);
         genreFilter.innerHTML = '<option value="" id="genre-all">Failed to load genres</option>';
@@ -895,7 +895,7 @@
       });
     }
 
-    // Fetch & Render (UNCHANGED)
+    // Fetch & Render
     async function fetchMoviesInf(page = 1) {
       if (loadedPages.has(page) || page > maxPages) return [];
       let url = "";
@@ -1018,7 +1018,6 @@
       document.getElementById('modal-cast').textContent = "Loading cast...";
       document.getElementById('modal-crew').textContent = "";
       document.getElementById('modal-trailer').innerHTML = "";
-      document.getElementById('similar-movies').innerHTML = "";
       fetch(`https://api.themoviedb.org/3/movie/${movie.id}/credits?api_key=${apiKey}`)
         .then(r => r.json()).then(data => {
           let cast = (data.cast || []).slice(0, 5).map(c => c.name).join(', ');
@@ -1032,7 +1031,7 @@
           if (yt)
             document.getElementById('modal-trailer').innerHTML = `<a href="https://youtube.com/watch?v=${yt.key}" target="_blank" rel="noopener">▶ Watch Official Trailer</a>`;
         });
-      document.getElementById('server').value = "vidsrc.cc";
+      document.getElementById('server').value = "player.videasy.net";
       changeServer();
       fetch(`https://api.themoviedb.org/3/movie/${movie.id}/similar?api_key=${apiKey}`)
         .then(r => r.json()).then(data => {
@@ -1063,15 +1062,15 @@
       const iframe = document.getElementById('modal-video');
       const playOverlay = iframe.parentElement.querySelector('.iframe-play-overlay');
       const currentServer = serverSelect.value;
-      let movieId = lastModalMovie.id;
+      const movieId = lastModalMovie.id;
       let embedURL = '';
 
-      if (currentServer === 'vidsrc.cc') {
+      if (currentServer === 'player.videasy.net') {
+        embedURL = `https://player.videasy.net/movie/${movieId}`;
+      } else if (currentServer === 'vidsrc.cc') {
         embedURL = `https://vidsrc.cc/v2/embed/movie/${movieId}`;
       } else if (currentServer === 'vidsrc.me') {
         embedURL = `https://vidsrc.net/embed/movie/?tmdb=${movieId}`;
-      } else if (currentServer === 'player.videasy.net') {
-        embedURL = `https://player.videasy.net/movie/${movieId}`;
       }
 
       iframe.src = '';
@@ -1083,7 +1082,7 @@
         } catch (e) {
           console.warn('Auto-play failed:', e);
           playOverlay.style.display = 'flex';
-          showErrorMessage(iframe, 'Auto-play blocked or server unavailable. Click the play button or try another server.');
+          showErrorMessage(iframe, 'Auto-play blocked or server unavailable. Try another server.');
         }
       };
       iframe.onerror = function() {
@@ -1178,21 +1177,20 @@
       const iframe = document.getElementById('tv-episode-player');
       const playOverlay = iframe.parentElement.querySelector('.iframe-play-overlay');
       const serverSelect = document.getElementById('server');
-      serverSelect.value = 'vidsrc.cc';
+      serverSelect.value = 'player.videasy.net';
       const currentServer = serverSelect.value;
       let embedURL = '';
+      const fallbackURL = currentServer === 'player.videasy.net' ? `https://player.videasy.net/tv/${tvId}` :
+                          currentServer === 'vidsrc.cc' ? `https://vidsrc.cc/v2/embed/tv/${tvId}` :
+                          `https://vidsrc.net/embed/tv/?tmdb=${tvId}`;
 
-      if (currentServer === 'vidsrc.cc') {
+      if (currentServer === 'player.videasy.net') {
+        embedURL = `https://player.videasy.net/tv/${tvId}/${seasonNum}/${episodeNum}`;
+      } else if (currentServer === 'vidsrc.cc') {
         embedURL = `https://vidsrc.cc/v2/embed/tv/${tvId}/${seasonNum}/${episodeNum}`;
       } else if (currentServer === 'vidsrc.me') {
         embedURL = `https://vidsrc.net/embed/tv/?tmdb=${tvId}&season=${seasonNum}&episode=${episodeNum}`;
-      } else if (currentServer === 'player.videasy.net') {
-        embedURL = `https://player.videasy.net/tv/${tvId}/${seasonNum}/${episodeNum}`;
       }
-
-      const fallbackURL = currentServer === 'vidsrc.cc' ? `https://vidsrc.cc/v2/embed/tv/${tvId}` :
-                         currentServer === 'vidsrc.me' ? `https://vidsrc.net/embed/tv/?tmdb=${tvId}` :
-                         `https://player.videasy.net/tv/${tvId}`;
 
       iframe.style.display = "";
       iframe.src = '';
