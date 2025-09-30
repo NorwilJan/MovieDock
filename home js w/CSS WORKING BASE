@@ -1,4 +1,4 @@
-/* Existing CSS remains unchanged, adding new styles for episode list and season selector */
+/* Existing CSS with added slideshow styles */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: Arial, sans-serif; background: #111; color: #fff; }
@@ -18,15 +18,75 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
 
 .banner {
   height: 50vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.slideshow-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.slides {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.slide {
+  min-width: 100%;
+  height: 100%;
   background-size: cover;
+  background-position: center;
   display: flex;
   align-items: center;
   padding: 20px;
+  cursor: pointer;
+  transition: transform 0.5s ease;
 }
 
-.banner h1 {
+.slide h1 {
   background: rgba(0,0,0,0.7);
   padding: 10px;
+  color: #fff;
+  font-size: 2em;
+}
+
+.prev, .next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.5);
+  color: white;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 24px;
+  user-select: none;
+}
+
+.prev { left: 10px; }
+.next { right: 10px; }
+
+.dots {
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  text-align: center;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 0 5px;
+  background: #bbb;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.dot.active {
+  background: #fff;
 }
 
 .row {
@@ -225,7 +285,25 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   .banner {
     height: 30vh;
   }
-    
+
+  .slide h1 {
+    font-size: 1.5em;
+  }
+
+  .prev, .next {
+    font-size: 18px;
+    padding: 8px;
+  }
+
+  .dots {
+    bottom: 5px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+  }
+
   .modal-body {
     align-items: center;
   }
@@ -271,8 +349,8 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
 }
 
 @media (max-width: 480px) {
-  .banner h1 {
-    font-size: 20px;
+  .slide h1 {
+    font-size: 1.2em;
     padding: 5px;
   }
 
