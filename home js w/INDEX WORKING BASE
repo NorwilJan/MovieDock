@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Website</title>
+  <title>ReelRoom</title>
   <link rel="stylesheet" href="css/home.css">
   <link rel="preload" href="css/home.css" as="style">
   <link rel="preload" href="js/home.js" as="script">
@@ -14,7 +14,7 @@
 
 <body>
   <div class="navbar">
-    <img src="logo.png" alt="LOGO HERE" />
+    <img src="logo.png" alt="ReelRoom Logo" />
     <div class="nav-links">
       <a href="index.html">Home</a>
       <input type="text" class="search-bar" placeholder="Search..." onfocus="openSearchModal()" />
@@ -55,7 +55,7 @@
     <div class="list" id="netflix-list"></div>
   </div>
 
-  <div id="empty-message" style="display: none; text-align: center; color: #ccc; padding: 20px;">No content available at the moment. Try searching!</div>
+  <div id="empty-message" style="display: none; text-align: center; color: #ccc; padding: 20px;">Loading content...</div>
 
   <div class="modal" id="modal">
     <div class="modal-content">
@@ -93,7 +93,7 @@
 
   <footer class="footer">
     <div class="footer-content">
-      <p>&copy; 2025 My Website. All rights reserved.</p>
+      <p>&copy; 2025 ReelRoom. All rights reserved.</p>
       <div class="footer-links">
         <a href="#">Disclaimer</a>
         <a href="#">About Us</a>
