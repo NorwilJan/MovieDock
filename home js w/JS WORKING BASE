@@ -1,6 +1,8 @@
-const API_KEY = '40f1982842db35042e8561b13b38d492';
+// js/home.js
+const API_KEY = '40f1982842db35042e8561b13b38d492'; // Your original TMDB API key
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/original';
+const FALLBACK_IMAGE = 'https://via.placeholder.com/150x225?text=No+Image'; // Fallback for missing posters
 let currentItem;
 let currentSeason = 1;
 let currentEpisode = 1;
@@ -11,68 +13,120 @@ let currentPages = {
   tagalogMovies: 1,
   netflix: 1
 };
-let isLoading = false;
+let isLoading = {
+  movies: false,
+  tvshows: false,
+  anime: false,
+  'tagalog-movies': false,
+  netflix: false
+};
+let hasMore = {
+  movies: true,
+  tvshows: true,
+  anime: true,
+  'tagalog-movies': true,
+  netflix: true
+};
+let scrollActive = {
+  movies: false,
+  tvshows: false,
+  anime: false,
+  'tagalog-movies': false,
+  netflix: false
+};
 let slideshowItems = [];
 let currentSlide = 0;
 let slideshowInterval;
 
 async function fetchTrending(type, page = 1) {
   try {
+    console.log(`Fetching trending ${type} page ${page}...`);
     const res = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}&page=${page}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     const data = await res.json();
-    return data.results || [];
+    console.log(`Fetched ${data.results?.length || 0} items for ${type}`);
+    return data;
   } catch (error) {
     console.error(`Error fetching trending ${type}:`, error);
-    return [];
+    showError(`Failed to load ${type}. Check API key or connection.`, `${type}-list`);
+    return { results: [] };
   }
 }
 
 async function fetchTrendingAnime(page = 1) {
-  let allResults = [];
   try {
-    const res = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&page=${page}`);
-    const data = await res.json();
-    const filtered = data.results.filter(item =>
-      item.original_language === 'ja' && item.genre_ids.includes(16)
+    console.log(`Fetching anime (movies and TV shows) page ${page}...`);
+    // Fetch anime movies
+    const movieRes = await fetch(
+      `${BASE_URL}/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}&with_genres=16&with_original_language=ja`
     );
-    allResults = allResults.concat(filtered);
+    if (!movieRes.ok) throw new Error(`Movies HTTP ${movieRes.status}`);
+    const movieData = await movieRes.json();
+    const movies = movieData.results || [];
+
+    // Fetch anime TV shows
+    const tvRes = await fetch(
+      `${BASE_URL}/discover/tv?api_key=${API_KEY}&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}&with_genres=16&with_original_language=ja`
+    );
+    if (!tvRes.ok) throw new Error(`TV HTTP ${tvRes.status}`);
+    const tvData = await tvRes.json();
+    const tvShows = tvData.results || [];
+
+    // Combine and sort by popularity
+    const combined = [...movies, ...tvShows]
+      .filter(item => item.poster_path) // Ensure items have posters
+      .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+      .slice(0, 20); // Limit to 20 items per page
+    console.log(`Fetched ${combined.length} anime items (movies: ${movies.length}, TV: ${tvShows.length})`);
+    return combined;
   } catch (error) {
     console.error('Error fetching trending anime:', error);
+    showError('Failed to load anime. Check API key or connection.', 'anime-list');
+    return [];
   }
-  return allResults;
 }
 
 async function fetchTagalogMovies(page = 1) {
   try {
+    console.log(`Fetching Tagalog movies page ${page}...`);
     const res = await fetch(
       `${BASE_URL}/discover/movie?api_key=${API_KEY}&language=tl&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}&with_original_language=tl`
     );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return data.results || [];
+    console.log(`Fetched ${data.results?.length || 0} Tagalog movies`);
+    return data;
   } catch (error) {
     console.error('Error fetching Tagalog movies:', error);
-    return [];
+    showError('Failed to load Tagalog movies.', 'tagalog-movies-list');
+    return { results: [] };
   }
 }
 
 async function fetchNetflixContent(page = 1) {
   try {
+    console.log(`Fetching Netflix content page ${page}...`);
     const movieRes = await fetch(
       `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_watch_providers=8&watch_region=US&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}`
     );
+    if (!movieRes.ok) throw new Error(`Movies HTTP ${movieRes.status}`);
     const movieData = await movieRes.json();
     const movies = movieData.results || [];
 
     const tvRes = await fetch(
       `${BASE_URL}/discover/tv?api_key=${API_KEY}&with_watch_providers=8&watch_region=US&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}`
     );
+    if (!tvRes.ok) throw new Error(`TV HTTP ${tvRes.status}`);
     const tvData = await tvRes.json();
     const tvShows = tvData.results || [];
 
     const combined = [...movies, ...tvShows].sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
-    return combined.slice(0, 20);
+    const sliced = combined.slice(0, 20);
+    console.log(`Fetched ${sliced.length} Netflix items`);
+    return sliced;
   } catch (error) {
     console.error('Error fetching Netflix content:', error);
+    showError('Failed to load Netflix content.', 'netflix-list');
     return [];
   }
 }
@@ -80,6 +134,7 @@ async function fetchNetflixContent(page = 1) {
 async function fetchSeasonsAndEpisodes(tvId) {
   try {
     const res = await fetch(`${BASE_URL}/tv/${tvId}?api_key=${API_KEY}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return data.seasons || [];
   } catch (error) {
@@ -91,11 +146,41 @@ async function fetchSeasonsAndEpisodes(tvId) {
 async function fetchEpisodes(tvId, seasonNumber) {
   try {
     const res = await fetch(`${BASE_URL}/tv/${tvId}/season/${seasonNumber}?api_key=${API_KEY}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return data.episodes || [];
   } catch (error) {
     console.error('Error fetching episodes:', error);
     return [];
+  }
+}
+
+function showError(message, containerId) {
+  const container = document.getElementById(containerId);
+  if (container) {
+    const error = document.createElement('p');
+    error.className = 'error-message';
+    error.textContent = message;
+    container.appendChild(error);
+  } else {
+    const emptyMessage = document.getElementById('empty-message');
+    if (emptyMessage) {
+      emptyMessage.textContent = message;
+      emptyMessage.style.display = 'block';
+      emptyMessage.className = 'error-message';
+    }
+  }
+}
+
+function showLoading(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const existingLoading = container.querySelector('.loading');
+  if (!existingLoading) {
+    const loading = document.createElement('p');
+    loading.className = 'loading';
+    loading.textContent = 'Loading...';
+    container.appendChild(loading);
   }
 }
 
@@ -105,12 +190,17 @@ function displaySlides() {
   slidesContainer.innerHTML = '';
   dotsContainer.innerHTML = '';
 
+  if (slideshowItems.length === 0) {
+    slidesContainer.innerHTML = '<h1 class="loading">No featured content available</h1>';
+    return;
+  }
+
   slideshowItems.forEach((item, index) => {
     if (!item.backdrop_path) return;
     const slide = document.createElement('div');
     slide.className = 'slide';
     slide.style.backgroundImage = `url(${IMG_URL}${item.backdrop_path})`;
-    slide.innerHTML = `<h1>${item.title || item.name}</h1>`;
+    slide.innerHTML = `<h1>${item.title || item.name || 'Unknown'}</h1>`;
     slide.onclick = () => showDetails(item);
     slidesContainer.appendChild(slide);
 
@@ -130,6 +220,7 @@ function displaySlides() {
 function showSlide() {
   const slides = document.querySelectorAll('.slide');
   const dots = document.querySelectorAll('.dot');
+  if (slides.length === 0) return;
   slides.forEach((slide, index) => {
     slide.style.transform = `translateX(-${currentSlide * 100}%)`;
   });
@@ -138,36 +229,133 @@ function showSlide() {
   });
   clearInterval(slideshowInterval);
   slideshowInterval = setInterval(() => {
-    currentSlide = (currentSlide + 1) % slideshowItems.length;
+    currentSlide = (currentSlide + 1) % slides.length;
     showSlide();
-  }, 5000); // Change slide every 5 seconds
+  }, 5000);
 }
 
 function changeSlide(n) {
-  currentSlide = (currentSlide + n + slideshowItems.length) % slideshowItems.length;
+  const slides = document.querySelectorAll('.slide');
+  if (slides.length === 0) return;
+  currentSlide = (currentSlide + n + slides.length) % slides.length;
   showSlide();
 }
 
 function displayList(items, containerId) {
   const container = document.getElementById(containerId);
-  const emptyMessage = document.getElementById('empty-message');
-  
+  if (!container) {
+    console.error(`Container ${containerId} not found`);
+    return;
+  }
+  container.querySelector('.loading')?.remove();
+  container.querySelector('.error-message')?.remove();
+
   if (items.length === 0 && container.innerHTML === '') {
     container.innerHTML = '<p style="color: #ccc; text-align: center;">No content available.</p>';
     return;
   }
 
   items.forEach(item => {
-    if (!item.poster_path) return;
     const img = document.createElement('img');
-    img.src = `${IMG_URL}${item.poster_path}`;
-    img.alt = (item.title || item.name) + (item.media_type ? ` (${item.media_type})` : '');
+    img.src = item.poster_path ? `${IMG_URL}${item.poster_path}` : FALLBACK_IMAGE;
+    img.alt = (item.title || item.name || 'Unknown') + (item.media_type ? ` (${item.media_type})` : '');
     img.onclick = () => showDetails(item);
     container.appendChild(img);
   });
+}
 
-  if (items.length > 0) {
-    emptyMessage.style.display = 'none';
+function addLoadMoreButton(containerId, category) {
+  const container = document.getElementById(containerId);
+  if (!container || container.querySelector('.load-more')) return;
+  const button = document.createElement('button');
+  button.className = 'load-more';
+  button.textContent = 'Show More';
+  button.onclick = () => loadMore(category);
+  container.appendChild(button);
+}
+
+function addLoadMoreIfApplicable(containerId, category) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (container.innerHTML && !container.querySelector('p') && hasMore[category]) {
+    addLoadMoreButton(containerId, category);
+  }
+}
+
+function addScrollListener(category) {
+  const containerId = category + '-list';
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.onscroll = function () {
+    if (
+      scrollActive[category] &&
+      !isLoading[category] &&
+      hasMore[category] &&
+      container.scrollLeft + container.clientWidth >= container.scrollWidth - 50
+    ) {
+      loadMore(category);
+    }
+  };
+}
+
+async function loadMore(category) {
+  if (isLoading[category] || !hasMore[category]) return;
+  isLoading[category] = true;
+
+  const containerId = category + '-list';
+  const container = document.getElementById(containerId);
+  const button = container.querySelector('.load-more');
+
+  if (button) {
+    button.textContent = 'Loading...';
+    button.disabled = true;
+  } else {
+    showLoading(containerId);
+  }
+
+  let pageKey = category.replace(/-/g, '');
+  if (pageKey === 'tvshows') pageKey = 'tvShows';
+  if (pageKey === 'tagalogmovies') pageKey = 'tagalogMovies';
+  currentPages[pageKey]++;
+
+  try {
+    let data;
+    if (category === 'movies') {
+      data = await fetchTrending('movie', currentPages[pageKey]);
+    } else if (category === 'tvshows') {
+      data = await fetchTrending('tv', currentPages[pageKey]);
+    } else if (category === 'anime') {
+      data = await fetchTrendingAnime(currentPages[pageKey]);
+    } else if (category === 'tagalog-movies') {
+      data = await fetchTagalogMovies(currentPages[pageKey]);
+    } else if (category === 'netflix') {
+      data = await fetchNetflixContent(currentPages[pageKey]);
+    }
+
+    const items = category === 'anime' || category === 'netflix' ? data : data.results || [];
+
+    displayList(items, containerId);
+
+    if (items.length < 20) {
+      hasMore[category] = false;
+      if (button) {
+        button.textContent = 'No More Content';
+        button.disabled = true;
+      }
+    } else if (button) {
+      button.remove();
+      scrollActive[category] = true;
+      addScrollListener(category);
+    }
+  } catch (error) {
+    console.error(`Error loading more for ${category}:`, error);
+    showError(`Failed to load more ${category}.`, containerId);
+    if (button) {
+      button.textContent = 'Show More';
+      button.disabled = false;
+    }
+  } finally {
+    isLoading[category] = false;
   }
 }
 
@@ -175,15 +363,15 @@ async function showDetails(item) {
   currentItem = item;
   currentSeason = 1;
   currentEpisode = 1;
-  document.getElementById('modal-title').textContent = item.title || item.name;
-  document.getElementById('modal-description').textContent = item.overview;
-  document.getElementById('modal-image').src = `${IMG_URL}${item.poster_path}`;
+  document.getElementById('modal-title').textContent = item.title || item.name || 'Unknown';
+  document.getElementById('modal-description').textContent = item.overview || 'No description available.';
+  document.getElementById('modal-image').src = item.poster_path ? `${IMG_URL}${item.poster_path}` : FALLBACK_IMAGE;
   document.getElementById('modal-rating').innerHTML = '★'.repeat(Math.round((item.vote_average || 0) / 2));
   document.getElementById('server').value = 'player.videasy.net';
-  
+
   const seasonSelector = document.getElementById('season-selector');
   const episodeList = document.getElementById('episode-list');
-  
+
   if (item.media_type === 'tv' || !item.title) {
     seasonSelector.style.display = 'block';
     const seasons = await fetchSeasonsAndEpisodes(item.id);
@@ -201,7 +389,7 @@ async function showDetails(item) {
     seasonSelector.style.display = 'none';
     episodeList.innerHTML = '';
   }
-  
+
   changeServer();
   document.getElementById('modal').style.display = 'flex';
 }
@@ -213,14 +401,14 @@ async function loadEpisodes() {
   const episodes = await fetchEpisodes(currentItem.id, seasonNumber);
   const episodeList = document.getElementById('episode-list');
   episodeList.innerHTML = '';
-  
+
   episodes.forEach(episode => {
     const div = document.createElement('div');
     div.className = 'episode-item';
     const img = episode.still_path
       ? `<img src="${IMG_URL}${episode.still_path}" alt="Episode ${episode.episode_number}" />`
       : '';
-    div.innerHTML = `${img}<span>Episode ${episode.episode_number}: ${episode.name}</span>`;
+    div.innerHTML = `${img}<span>Episode ${episode.episode_number}: ${episode.name || 'Untitled'}</span>`;
     div.onclick = () => {
       currentEpisode = episode.episode_number;
       changeServer();
@@ -278,15 +466,15 @@ async function searchTMDB() {
 
   try {
     const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&query=${query}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
     const container = document.getElementById('search-results');
     container.innerHTML = '';
     data.results.forEach(item => {
-      if (!item.poster_path) return;
       const img = document.createElement('img');
-      img.src = `${IMG_URL}${item.poster_path}`;
-      img.alt = item.title || item.name;
+      img.src = item.poster_path ? `${IMG_URL}${item.poster_path}` : FALLBACK_IMAGE;
+      img.alt = item.title || item.name || 'Unknown';
       img.onclick = () => {
         closeSearchModal();
         showDetails(item);
@@ -295,46 +483,23 @@ async function searchTMDB() {
     });
   } catch (error) {
     console.error('Error searching:', error);
-    document.getElementById('search-results').innerHTML = '<p style="color: #ccc;">Search failed. Try again.</p>';
-  }
-}
-
-async function loadMoreContent() {
-  if (isLoading) return;
-  isLoading = true;
-
-  try {
-    const movies = await fetchTrending('movie', ++currentPages.movies);
-    const tvShows = await fetchTrending('tv', ++currentPages.tvShows);
-    const anime = await fetchTrendingAnime(++currentPages.anime);
-    const tagalogMovies = await fetchTagalogMovies(++currentPages.tagalogMovies);
-    const netflixContent = await fetchNetflixContent(++currentPages.netflix);
-
-    displayList(movies, 'movies-list');
-    displayList(tvShows, 'tvshows-list');
-    displayList(anime, 'anime-list');
-    displayList(tagalogMovies, 'tagalog-movies-list');
-    displayList(netflixContent, 'netflix-list');
-  } catch (error) {
-    console.error('Error loading more content:', error);
-  } finally {
-    isLoading = false;
-  }
-}
-
-function handleScroll() {
-  const scrollPosition = window.innerHeight + window.scrollY;
-  const threshold = document.body.offsetHeight - 200;
-  if (scrollPosition >= threshold && !isLoading) {
-    loadMoreContent();
+    showError('Search failed. Try again.', 'search-results');
   }
 }
 
 async function init() {
-  document.getElementById('empty-message').style.display = 'block';
+  console.log('Initializing site...');
+  document.getElementById('empty-message').style.display = 'none';
 
   try {
-    const [movies, tvShows, anime, tagalogMovies, netflixContent] = await Promise.all([
+    showLoading('slides');
+    showLoading('movies-list');
+    showLoading('tvshows-list');
+    showLoading('anime-list');
+    showLoading('tagalog-movies-list');
+    showLoading('netflix-list');
+
+    const [moviesData, tvShowsData, anime, tagalogMoviesData, netflixContent] = await Promise.all([
       fetchTrending('movie', currentPages.movies),
       fetchTrending('tv', currentPages.tvShows),
       fetchTrendingAnime(currentPages.anime),
@@ -342,31 +507,39 @@ async function init() {
       fetchNetflixContent(currentPages.netflix)
     ]);
 
-    // Select top 3 trending movies and one from each other category
-    slideshowItems = [
-      ...movies.slice(0, 3), // Top 3 movies
-      tvShows[0] || {}, // First TV show
-      anime[0] || {}, // First anime
-      tagalogMovies[0] || {}, // First Tagalog movie
-      netflixContent[0] || {} // First Netflix content
-    ].filter(item => item.backdrop_path && (item.title || item.name)); // Ensure valid items
+    const movies = moviesData.results || [];
+    const tvShows = tvShowsData.results || [];
+    const tagalogMovies = tagalogMoviesData.results || [];
 
-    if (slideshowItems.length > 0) {
-      displaySlides();
-    } else {
-      document.getElementById('slides').innerHTML = '<h1>No featured content available</h1>';
-    }
+    slideshowItems = [
+      ...movies.slice(0, 3),
+      tvShows[0] || {},
+      anime[0] || {},
+      tagalogMovies[0] || {},
+      netflixContent[0] || {}
+    ].filter(item => item.backdrop_path && (item.title || item.name));
+
+    displaySlides();
 
     displayList(movies, 'movies-list');
-    displayList(tvShows, 'tvshows-list');
-    displayList(anime, 'anime-list');
-    displayList(tagalogMovies, 'tagalog-movies-list');
-    displayList(netflixContent, 'netflix-list');
+    addLoadMoreIfApplicable('movies-list', 'movies');
 
-    window.addEventListener('scroll', handleScroll);
+    displayList(tvShows, 'tvshows-list');
+    addLoadMoreIfApplicable('tvshows-list', 'tvshows');
+
+    displayList(anime, 'anime-list');
+    addLoadMoreIfApplicable('anime-list', 'anime');
+
+    displayList(tagalogMovies, 'tagalog-movies-list');
+    addLoadMoreIfApplicable('tagalog-movies-list', 'tagalog-movies');
+
+    displayList(netflixContent, 'netflix-list');
+    addLoadMoreIfApplicable('netflix-list', 'netflix');
+
+    console.log('Initialization complete.');
   } catch (error) {
     console.error('Error initializing:', error);
-    document.getElementById('empty-message').textContent = 'Failed to load content. Please refresh the page.';
+    showError('Failed to load content. Please refresh or check your connection.', 'empty-message');
   }
 }
 
