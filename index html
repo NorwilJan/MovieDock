@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Website</title>
+  <title>ReelRoom</title>
   <link rel="stylesheet" href="css/home.css">
   <link rel="preload" href="css/home.css" as="style">
   <link rel="preload" href="js/home.js" as="script">
@@ -13,15 +14,22 @@
 
 <body>
   <div class="navbar">
-    <img src="logo.png" alt="LOGO HERE" />
+    <h1 class="logo-text">REELROOM</h1>
     <div class="nav-links">
       <a href="index.html">Home</a>
-      <input type="text" class="search-bar" placeholder="Search..." onfocus="openSearchModal()" />
+      <button class="search-icon-btn" onclick="openSearchModal()">
+        <i class="fas fa-search"></i>
+      </button>
     </div>
   </div>
 
   <div class="banner" id="banner">
-    <h1 id="banner-title"></h1>
+    <div class="slideshow-container">
+      <div class="slides" id="slides"></div>
+      <a class="prev" onclick="changeSlide(-1)">&#10094;</a>
+      <a class="next" onclick="changeSlide(1)">&#10095;</a>
+      <div class="dots" id="dots"></div>
+    </div>
   </div>
 
   <div class="row">
@@ -39,18 +47,34 @@
     <div class="list" id="anime-list"></div>
   </div>
 
+  <div class="row">
+    <h2>Trending Tagalog Movies</h2>
+    <div class="list" id="tagalog-movies-list"></div>
+  </div>
+
+  <div class="row">
+    <h2>Trending Netflix Movies</h2>
+    <div class="list" id="netflix-movies-list"></div>
+  </div>
+
+  <div class="row">
+    <h2>Trending Netflix TV Shows</h2>
+    <div class="list" id="netflix-tv-list"></div>
+  </div>
+  
+  <div id="empty-message" style="display: none; text-align: center; color: #ccc; padding: 20px;">Loading content...</div>
+
   <div class="modal" id="modal">
     <div class="modal-content">
       <span class="close" onclick="closeModal()" style="color: red;">&times;</span>
       <div class="modal-body">
-  <img id="modal-image" src="" alt="" />
-  <div class="modal-text">
-    <h2 id="modal-title"></h2>
-    <div class="stars" id="modal-rating"></div>
-    <p id="modal-description"></p>
-  </div>
-</div>
-      
+        <img id="modal-image" src="" alt="" />
+        <div class="modal-text">
+          <h2 id="modal-title"></h2>
+          <div class="stars" id="modal-rating"></div>
+          <p id="modal-description"></p>
+        </div>
+      </div>
       <div class="server-selector">
         <label for="server">Change Server:</label>
         <select id="server" onchange="changeServer()">
@@ -59,26 +83,30 @@
           <option value="player.videasy.net">Player.Videasy.net</option>
         </select>
       </div>
+      <div class="season-selector" id="season-selector" style="display: none;">
+        <label for="season">Select Season:</label>
+        <select id="season" onchange="loadEpisodes()"></select>
+      </div>
+      <div class="episode-list" id="episode-list"></div>
       <iframe id="modal-video" width="100%" height="315" frameborder="0" allowfullscreen></iframe>
     </div>
   </div>
 
   <div class="search-modal" id="search-modal">
     <span class="close" onclick="closeSearchModal()" style="color: red;">&times;</span>
-    <input type="text" id="search-input" placeholder="Search for a movie or show..." oninput="searchTMDB()" />
+    <input type="text" id="search-input" placeholder="Search for a movie or show..." onkeyup="debouncedSearchTMDB()" />
     <div class="results" id="search-results"></div>
   </div>
 
-<footer class="footer">
-  <div class="footer-content">
-    <p>&copy; 2025 My Website. All rights reserved.</p>
-    <div class="footer-links">
-      <a href="#">Disclaimer</a>
-      <a href="#">About Us</a>
-      <a href="#">Contact Us</a>
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2025 ReelRoom. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#">Disclaimer</a>
+        <a href="#">About Us</a>
+        <a href="#">Contact Us</a>
+      </div>
     </div>
-  </div>
-</footer>
-
-  
+  </footer>
 </body>
+</html>
