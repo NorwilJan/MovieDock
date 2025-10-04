@@ -14,7 +14,7 @@
 
 <body>
   <div class="navbar">
-    <img src="logo.png" alt="ReelRoom Logo" />
+    <h1 class="logo-text">REELROOM</h1>
     <div class="nav-links">
       <a href="index.html">Home</a>
       <input type="text" class="search-bar" placeholder="Search..." onfocus="openSearchModal()" />
