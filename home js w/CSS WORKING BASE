@@ -6,8 +6,15 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   display: flex; justify-content: space-between; align-items: center;
   padding: 10px; background: #222;
 }
-
-.navbar img { height: 40px; }
+.logo-text {
+  margin: 0;                    /* Why? Resets default h1 margins so it fits snugly in navbar. */
+  font-size: 28px;              /* Why? Matches logo's ~40px visual height without overwhelming the bar. */
+  font-weight: bold;            /* Why? Makes it punchy and readable on dark bg. */
+  color: #fff;                  /* Why? Matches navbar text/links for consistency. */
+  letter-spacing: 2px;          /* Why? Adds modern spacing between letters for a branded feel. */
+  text-transform: uppercase;    /* Why? All-caps for cinematic "REELROOM" vibe. */
+  font-family: 'Arial Black', Arial, sans-serif;  /* Why? Bold variant of your site's font; falls back to Arial. */
+}
 .nav-links { display: flex; align-items: center; gap: 10px; }
 .nav-links a { color: white; text-decoration: none; margin: 0 5px; }
 
@@ -459,4 +466,13 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   text-align: center;
   padding: 20px;
   color: #ccc;
+}
+
+/* Mobile fix for logo spacing */
+@media (max-width: 768px) {
+  .logo-text {
+    font-size: 18px;              /* Smaller text to avoid crowding */
+    margin-bottom: 5px;           /* Tiny gap before nav-links stack below */
+    letter-spacing: 1px;          /* Slightly tighter spacing for mobile flow */
+  }
 }
