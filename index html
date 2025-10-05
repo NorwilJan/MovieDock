@@ -61,7 +61,11 @@
     <h2>Trending Netflix TV Shows</h2>
     <div class="list" id="netflix-tv-list"></div>
   </div>
-  
+
+  <div class="row">
+    <h2>Trending Korean Drama</h2>
+    <div class="list" id="korean-drama-list"></div>
+  </div>
   <div id="empty-message" style="display: none; text-align: center; color: #ccc; padding: 20px;">Loading content...</div>
 
   <div class="modal" id="modal">
