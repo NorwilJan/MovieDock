@@ -10,7 +10,7 @@ let slideshowItems = [];
 let currentSlide = 0;
 let slideshowInterval;
 
-// Store pagination and loading state for each category
+// Replaced simple currentPages/isLoading with a single state object from the 2nd code
 let categoryState = {
     movies: { page: 1, isLoading: false, filters: {} },
     tvshows: { page: 1, isLoading: false, filters: {} },
@@ -23,9 +23,9 @@ let categoryState = {
 
 let currentFullView = null; // Tracks the category currently in the full view
 let currentCategoryToFilter = null; // Tracks the category targeted by the filter modal
-let scrollPosition = 0; // NEW: To save the scroll position of the full view grid
+let scrollPosition = 0; 
 
-// Simplified Genre IDs for the filter dropdown
+// Simplified Genre IDs for the filter dropdown - NEW
 const GENRES = [
   { id: 28, name: 'Action' }, { id: 12, name: 'Adventure' }, 
   { id: 35, name: 'Comedy' }, { id: 80, name: 'Crime' }, 
@@ -37,6 +37,7 @@ const GENRES = [
 
 /**
  * Utility function to debounce another function call.
+ * Ensures a function is not called until a certain time has passed after the last call.
  */
 function debounce(func, delay) {
   let timeout;
@@ -118,7 +119,30 @@ async function fetchCategoryContent(category, page, filters = {}) {
     }
 }
 
-// --- UI UTILITIES ---
+
+async function fetchSeasonsAndEpisodes(tvId) {
+  try {
+    const res = await fetch(`${BASE_URL}/tv/${tvId}?api_key=${API_KEY}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return data.seasons || [];
+  } catch (error) {
+    console.error('Error fetching seasons:', error);
+    return [];
+  }
+}
+
+async function fetchEpisodes(tvId, seasonNumber) {
+  try {
+    const res = await fetch(`${BASE_URL}/tv/${tvId}/season/${seasonNumber}?api_key=${API_KEY}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return data.episodes || [];
+  } catch (error) {
+    console.error('Error fetching episodes:', error);
+    return [];
+  }
+}
 
 function removeLoadingAndError(containerId) {
     const container = document.getElementById(containerId);
@@ -152,8 +176,6 @@ function showLoading(containerId) {
   loading.textContent = 'Loading...';
   container.appendChild(loading);
 }
-
-// --- SLIDESHOW LOGIC ---
 
 function displaySlides() {
   const slidesContainer = document.getElementById('slides');
@@ -214,22 +236,28 @@ function changeSlide(n) {
   showSlide();
 }
 
-// --- MAIN PAGE LIST DISPLAY ---
-
+/**
+ * Restored: displayList now appends items for infinite scroll, but clears for filter changes.
+ * The only way to clear content is via loadRowContent (which is called when filters change).
+ */
 function displayList(items, containerId) {
   const container = document.getElementById(containerId);
-  if (!container) return;
+  if (!container) {
+    console.error(`Container ${containerId} not found`);
+    return;
+  }
   
-  // Clear the container completely before displaying new filtered results
-  container.innerHTML = ''; 
   removeLoadingAndError(containerId);
 
-  if (items.length === 0) {
-    container.innerHTML = '<p style="color: #ccc; text-align: center; width: 100%;">No content matches your filters.</p>';
+  if (items.length === 0 && container.children.length === 0) {
+    container.innerHTML = '<p style="color: #ccc; text-align: center; width: 100%;">No content available.</p>';
     return;
   }
 
   items.forEach(item => {
+    // Check if the item already exists before appending (crucial for infinite scroll)
+    if (container.querySelector(`img[data-id="${item.id}"]`)) return;
+
     const img = document.createElement('img');
     img.src = item.poster_path ? `${IMG_URL}${item.poster_path}` : FALLBACK_IMAGE;
     img.alt = (item.title || item.name || 'Unknown') + (item.media_type ? ` (${item.media_type})` : '');
@@ -239,21 +267,82 @@ function displayList(items, containerId) {
   });
 }
 
-// --- FULL VIEW / INFINITE SCROLL LOGIC ---
+// --- MAIN ROW INFINITE SCROLL LOGIC (RESTORED & ADAPTED) ---
+
+function addScrollListener(category) {
+  const containerId = category + '-list';
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  // Remove existing listener to prevent duplicates
+  container.onscroll = null; 
+  
+  container.onscroll = function () {
+    const state = categoryState[category];
+    
+    if (
+      !state.isLoading &&
+      container.scrollLeft + container.clientWidth >= container.scrollWidth - 50
+    ) {
+      loadMore(category);
+    }
+  };
+}
+
+async function loadMore(category) {
+  const state = categoryState[category];
+  if (state.isLoading) return;
+
+  state.isLoading = true;
+  const containerId = category + '-list';
+  
+  showLoading(containerId);
+  
+  state.page++;
+
+  try {
+    // Use the filter-aware fetch function
+    const data = await fetchCategoryContent(category, state.page, state.filters);
+
+    const items = data.results || [];
+    
+    // Stop loading if the API returns no results for the next page
+    if (items.length === 0) {
+        state.page--; 
+        console.log(`${category} reached end of available content.`);
+        document.getElementById(containerId)?.querySelector('.loading')?.remove();
+        isLoading[category] = false;
+        return;
+    }
+    
+    // Display the items, which will be appended due to logic in displayList
+    displayList(items, containerId);
+
+  } catch (error) {
+    console.error(`Error loading more for ${category}:`, error);
+    showError(`Failed to load more ${category}.`, containerId);
+    state.page--;
+  } finally {
+    state.isLoading = false;
+    document.getElementById(containerId)?.querySelector('.loading')?.remove();
+  }
+}
+
+// --- FILTER & SHOW MORE LOGIC (ADAPTED) ---
 
 function updateFilterButtons(category, filters) {
     const row = document.getElementById(`${category}-row`);
     const filterBtn = row.querySelector('.filter-btn');
     const clearBtn = row.querySelector('.clear-filter-btn');
     
+    if (!filterBtn || !clearBtn) return; 
+
     const isFiltered = filters.year || filters.genre;
 
     if (isFiltered) {
-        // Use an indicator for active filter
         const genreName = filters.genre ? (GENRES.find(g => g.id == filters.genre)?.name || 'Genre') : '';
         const yearText = filters.year || '';
         
-        // Ensure to always show the filter icon with the text
         filterBtn.textContent = `Filtered ${genreName} ${yearText}`.trim();
         filterBtn.style.background = 'red';
         filterBtn.style.color = 'white';
@@ -274,13 +363,19 @@ async function loadRowContent(category, filters = {}) {
     const containerId = `${category}-list`;
     showLoading(containerId);
 
-    // Fetch only the first page for the main row preview
+    // Reset page to 1 for a new filtered query
+    state.page = 1; 
+
     const data = await fetchCategoryContent(category, 1, filters);
     
     // Update the state with the applied filters
     state.filters = filters;
 
-    displayList(data.results.slice(0, 15), containerId); // Limit to 15 for the row view
+    // Call displayList which will clear the container first since it's the start of a new query
+    const container = document.getElementById(containerId);
+    if(container) container.innerHTML = '';
+    displayList(data.results, containerId); // Display all results from page 1
+    
     updateFilterButtons(category, filters);
     
     state.isLoading = false;
@@ -298,10 +393,9 @@ function openFullView(category) {
     currentFullView = category;
     const filters = categoryState[category].filters; // Use currently applied row filters
     
-    // Create and display a new modal/container for full view
     const fullViewContainer = document.createElement('div');
     fullViewContainer.id = 'full-view-modal';
-    fullViewContainer.className = 'search-modal';
+    fullViewContainer.className = 'search-modal'; 
     fullViewContainer.style.display = 'flex';
     document.body.appendChild(fullViewContainer);
 
@@ -313,13 +407,13 @@ function openFullView(category) {
         <div class="results" id="${category}-full-list"></div>
     `;
 
-    // Reset pagination to 0 so the first call increments it to page 1
+    // Reset pagination to 0 so the first call increments it to page 1 for the full view
     categoryState[category].page = 0; 
-    loadMoreFullView(category, filters);
+    loadMoreFullView(category, filters, true); // Initial load
     
     const listContainer = document.getElementById(`${category}-full-list`);
+    // Add infinite scroll listener for the full view
     listContainer.onscroll = function () {
-        // Save the scroll position whenever the user scrolls
         scrollPosition = listContainer.scrollTop; 
         
         if (
@@ -335,13 +429,18 @@ function closeFullView() {
     const modal = document.getElementById('full-view-modal');
     if (modal) modal.remove();
     currentFullView = null;
-    scrollPosition = 0; // Reset scroll position when closing the full view
+    scrollPosition = 0; 
 }
 
 // Helper to display images in the grid (similar to search results)
-function displayFullList(items, containerId) {
+function displayFullList(items, containerId, isFirstLoad = false) {
   const container = document.getElementById(containerId);
+  if (isFirstLoad) {
+      container.innerHTML = ''; 
+  }
+  
   items.forEach(item => {
+    // Only add if not already present
     if (container.querySelector(`img[data-id="${item.id}"]`)) return;
 
     const img = document.createElement('img');
@@ -349,14 +448,13 @@ function displayFullList(items, containerId) {
     img.alt = item.title || item.name || 'Unknown';
     img.setAttribute('data-id', item.id);
     
-    // 📢 CHANGE: Only close the movie details modal, NOT the full view modal
     img.onclick = () => showDetails(item, true); 
     
     container.appendChild(img);
   });
 }
 
-async function loadMoreFullView(category, filters) {
+async function loadMoreFullView(category, filters, isFirstLoad = false) {
   const state = categoryState[category];
   const containerId = `${category}-full-list`;
   const container = document.getElementById(containerId); 
@@ -375,17 +473,13 @@ async function loadMoreFullView(category, filters) {
 
     const items = data.results || [];
     
-    // Check for end of content
     if (items.length === 0) {
         if (currentPage > 1) { 
-            state.page--; // Decrement if we tried to scroll past the last page
+            state.page--; 
         }
-        console.log(`${category} reached end of available content or found no content matching filter.`);
-        
         document.getElementById(containerId)?.querySelector('.loading')?.remove();
         state.isLoading = false;
         
-        // Show a "no results" message only if no items were ever loaded into the container.
         if (container.children.length === 0) {
             container.innerHTML = '<p style="color: #ccc; text-align: center; width: 100%;">No content matches your active filter in the full view.</p>';
         }
@@ -393,18 +487,17 @@ async function loadMoreFullView(category, filters) {
         return;
     }
     
-    displayFullList(items, containerId);
+    displayFullList(items, containerId, isFirstLoad);
 
   } catch (error) {
     console.error(`Error loading more for ${category}:`, error);
     showError(`Failed to load more ${category}.`, containerId);
-    state.page--; // Decrement page on fetch error
+    state.page--; 
   } finally {
     state.isLoading = false;
     document.getElementById(containerId)?.querySelector('.loading')?.remove();
     
-    // Restore scroll position after content loads (only needed for the first load)
-    if (currentPage === 1 && scrollPosition > 0) {
+    if (isFirstLoad && scrollPosition > 0) {
         container.scrollTop = scrollPosition;
     }
   }
@@ -416,11 +509,11 @@ function populateFilterOptions() {
     const yearSelect = document.getElementById('filter-year');
     const genreSelect = document.getElementById('filter-genre');
     
-    // Clear previous options
+    if (!yearSelect || !genreSelect) return; 
+
     yearSelect.innerHTML = '<option value="">Any Year</option>';
     genreSelect.innerHTML = '<option value="">Any Genre</option>';
     
-    // Populate Years (last 20 years)
     const currentYear = new Date().getFullYear();
     for (let i = 0; i < 20; i++) {
         const year = currentYear - i;
@@ -428,7 +521,6 @@ function populateFilterOptions() {
         yearSelect.appendChild(option);
     }
     
-    // Populate Genres
     GENRES.forEach(genre => {
         const option = new Option(genre.name, genre.id);
         genreSelect.appendChild(option);
@@ -438,25 +530,34 @@ function populateFilterOptions() {
 function openFilterModal(category) {
     currentCategoryToFilter = category;
     
-    const title = category.replace('-', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    document.getElementById('filter-modal-title').textContent = `Filter ${title}`;
+    const modalTitle = document.getElementById('filter-modal-title');
+    const filterModal = document.getElementById('filter-modal');
     
-    // Load current filters into the dropdowns
+    if (!modalTitle || !filterModal) {
+        console.error("Filter modal elements not found in HTML.");
+        return;
+    }
+
+    const title = category.replace('-', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    modalTitle.textContent = `Filter ${title}`;
+    
     const currentFilters = categoryState[category].filters;
     document.getElementById('filter-year').value = currentFilters.year || '';
     document.getElementById('filter-genre').value = currentFilters.genre || '';
     
-    document.getElementById('filter-modal').style.display = 'flex';
+    filterModal.style.display = 'flex';
 }
 
 /**
- * 📢 FINAL REVISED FUNCTION: Updates filters and IMMEDIATELY auto-opens the full view.
+ * Updates filters and IMMEDIATELY auto-opens the full view.
  */
 function applyFilters() {
     const year = document.getElementById('filter-year').value;
     const genre = document.getElementById('filter-genre').value;
     const category = currentCategoryToFilter;
 
+    if (!category) return;
+    
     // 1. Close the filter modal
     document.getElementById('filter-modal').style.display = 'none';
     
@@ -466,37 +567,17 @@ function applyFilters() {
     categoryState[category].filters = newFilters;
     updateFilterButtons(category, newFilters);
     
-    // 3. IMMEDIATELY open the full view as requested.
-    openFullView(category);
+    // 3. Re-load the main row content with new filters (this clears the row and loads page 1)
+    loadRowContent(category, newFilters);
+    
+    // 4. Optionally, you can still open the full view automatically, but I removed the auto-open 
+    // here to allow the user to see the filtered row first. If you must auto-open:
+    // openFullView(category);
 }
 
-// --- DETAILS MODAL LOGIC ---
 
-async function fetchSeasonsAndEpisodes(tvId) {
-  try {
-    const res = await fetch(`${BASE_URL}/tv/${tvId}?api_key=${API_KEY}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return data.seasons || [];
-  } catch (error) {
-    console.error('Error fetching seasons:', error);
-    return [];
-  }
-}
+// --- DETAILS & MODAL LOGIC (UNCHANGED) ---
 
-async function fetchEpisodes(tvId, seasonNumber) {
-  try {
-    const res = await fetch(`${BASE_URL}/tv/${tvId}/season/${seasonNumber}?api_key=${API_KEY}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return data.episodes || [];
-  } catch (error) {
-    console.error('Error fetching episodes:', error);
-    return [];
-  }
-}
-
-// 📢 CHANGE: Added optional parameter to indicate if the full view is open
 async function showDetails(item, isFullViewOpen = false) {
   currentItem = item;
   currentSeason = 1;
@@ -505,7 +586,7 @@ async function showDetails(item, isFullViewOpen = false) {
   document.getElementById('modal-description').textContent = item.overview || 'No description available.';
   document.getElementById('modal-image').src = item.poster_path ? `${IMG_URL}${item.poster_path}` : FALLBACK_IMAGE;
   document.getElementById('modal-rating').innerHTML = '★'.repeat(Math.round((item.vote_average || 0) / 2));
-  document.getElementById('server').value = 'player.videasy.net'; // Default server
+  document.getElementById('server').value = 'player.videasy.net'; 
 
   const seasonSelector = document.getElementById('season-selector');
   const episodeList = document.getElementById('episode-list');
@@ -536,7 +617,6 @@ async function showDetails(item, isFullViewOpen = false) {
   changeServer();
   document.getElementById('modal').style.display = 'flex';
   
-  // 📢 NEW: Hide the full view modal temporarily if it was open
   if (isFullViewOpen) {
       document.getElementById('full-view-modal').style.display = 'none';
   }
@@ -601,15 +681,11 @@ function closeModal() {
   document.getElementById('episode-list').innerHTML = '';
   document.getElementById('season-selector').style.display = 'none';
   
-  // 📢 NEW: If the full view modal was open before, show it again.
   const fullViewModal = document.getElementById('full-view-modal');
   if (fullViewModal) {
       fullViewModal.style.display = 'flex';
   }
 }
-
-
-// --- SEARCH MODAL LOGIC ---
 
 function openSearchModal() {
   document.getElementById('search-modal').style.display = 'flex';
@@ -636,7 +712,7 @@ const debouncedSearchTMDB = debounce(async () => {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    container.innerHTML = ''; // Clear loading
+    container.innerHTML = ''; 
     data.results
       .filter(item => item.media_type !== 'person' && item.poster_path)
       .forEach(item => {
@@ -682,14 +758,14 @@ async function init() {
 
   document.querySelectorAll('.filter-btn').forEach(button => {
     button.addEventListener('click', (e) => {
-      e.preventDefault(); // Prevent default link behavior if applicable
+      e.preventDefault(); 
       openFilterModal(button.getAttribute('data-category'));
     });
   });
   
   document.querySelectorAll('.clear-filter-btn').forEach(button => {
     button.addEventListener('click', (e) => {
-      e.preventDefault(); // Prevent default link behavior if applicable
+      e.preventDefault();
       clearFilters(button.getAttribute('data-category'));
     });
   });
@@ -706,7 +782,7 @@ async function init() {
     showLoading('netflix-tv-list');
     showLoading('korean-drama-list');
 
-    // Fetch and display all rows concurrently (no filters applied yet)
+    // Fetch and display all rows concurrently (page 1)
     const [moviesData, tvShowsData, animeData, tagalogMoviesData, netflixMoviesData, netflixTVData, koreanDramaData] = await Promise.all([
       fetchCategoryContent('movies', 1),
       fetchCategoryContent('tvshows', 1),
@@ -717,26 +793,34 @@ async function init() {
       fetchCategoryContent('korean-drama', 1)
     ]);
 
-    // Prepare data for the slideshow (using the initial page 1 results)
+    // Prepare data for the slideshow 
     const allResults = [
         ...moviesData.results, ...tvShowsData.results, ...animeData.results,
         ...tagalogMoviesData.results, ...netflixMoviesData.results, ...netflixTVData.results,
         ...koreanDramaData.results
     ].filter(item => item && item.backdrop_path);
 
-    // Create unique slideshow items from the fetched results
     slideshowItems = allResults.slice(0, 7);
     displaySlides();
 
-    // Display the initial rows (limited to 15 items)
-    displayList(moviesData.results.slice(0, 15), 'movies-list');
-    displayList(tvShowsData.results.slice(0, 15), 'tvshows-list');
-    displayList(animeData.results.slice(0, 15), 'anime-list');
-    displayList(tagalogMoviesData.results.slice(0, 15), 'tagalog-movies-list');
-    displayList(netflixMoviesData.results.slice(0, 15), 'netflix-movies-list');
-    displayList(netflixTVData.results.slice(0, 15), 'netflix-tv-list');
-    displayList(koreanDramaData.results.slice(0, 15), 'korean-drama-list');
+    // Display the initial rows
+    displayList(moviesData.results, 'movies-list');
+    displayList(tvShowsData.results, 'tvshows-list');
+    displayList(animeData.results, 'anime-list');
+    displayList(tagalogMoviesData.results, 'tagalog-movies-list');
+    displayList(netflixMoviesData.results, 'netflix-movies-list');
+    displayList(netflixTVData.results, 'netflix-tv-list');
+    displayList(koreanDramaData.results, 'korean-drama-list');
     
+    // Setup infinite scroll listeners for the main rows (RESTORED)
+    addScrollListener('movies');
+    addScrollListener('tvshows');
+    addScrollListener('anime');
+    addScrollListener('tagalog-movies');
+    addScrollListener('netflix-movies');
+    addScrollListener('netflix-tv');
+    addScrollListener('korean-drama');
+
   } catch (error) {
     console.error('Fatal initialization error:', error);
     showError('Failed to load content categories. Please check browser console.', 'empty-message');
