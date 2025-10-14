@@ -189,6 +189,45 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   display: none;
 }
 
+/* NEW: Styling for the dedicated link slideshow area */
+.link-slideshow-container {
+    padding-top: 5px; /* Add a bit of space below the banner */
+    border-bottom: 2px solid #333; /* Visual separator */
+    margin-bottom: 20px;
+}
+
+/* Ensure the link container elements behave like images in the list */
+.list a {
+    /* Required to make the transform effect work when hovering over the link */
+    display: block; 
+    flex-shrink: 0; 
+    margin-right: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+/* Apply the existing image hover effect to the link itself */
+.list a:hover {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+    z-index: 2;
+}
+
+/* Ensure the image inside the link follows the list image rules */
+.list a img {
+  width: 150px;
+  /* Improvement: Ensure consistent image height/ratio */
+  height: 225px; 
+  object-fit: cover;
+  flex-shrink: 0; /* Prevents images from shrinking on smaller lists */
+  margin-right: 0; /* Already handled by the 'a' tag margin */
+  cursor: pointer;
+  border-radius: 5px;
+  transition: none; /* Already handled by the 'a' tag transition */
+}
+
+
 .list img {
   width: 150px;
   /* Improvement: Ensure consistent image height/ratio */
@@ -201,6 +240,7 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   transition: transform 0.3s ease, filter 0.3s ease;
 }
 
+/* Original image hover styling is still needed for non-link images */
 .list img:hover {
   transform: scale(1.05);
   filter: brightness(1.2);
