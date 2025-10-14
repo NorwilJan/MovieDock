@@ -109,10 +109,70 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
 .row {
   margin: 20px;
 }
+/* For Favorites and Recently Viewed sections */
+.list-container-no-header {
+    margin: 20px;
+}
+
+.list-container-no-header h2 {
+    margin-bottom: 10px;
+    color: #fff;
+}
+
+
+/* New: Header structure for filter/show more */
+.row-header {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 10px;
+}
 
 .row h2 {
-  margin-bottom: 10px;
+  margin: 0;
 }
+
+/* New: Filter Button and Show More Link Styling */
+.filter-btn {
+  background: #444;
+  color: #fff;
+  border: 1px solid #666;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.9em;
+  margin-right: 10px;
+}
+
+.filter-btn:hover {
+  background: #666;
+}
+
+/* NEW: Clear Filter Button Styling */
+.clear-filter-btn {
+  background: #600; /* Darker red for clear */
+  border: 1px solid red;
+  margin-right: 5px; /* Adjust spacing */
+}
+
+.clear-filter-btn:hover {
+  background: red;
+}
+
+.show-more-link {
+  color: red;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 0.95em;
+  transition: color 0.2s;
+}
+
+.show-more-link:hover {
+  color: #fff;
+}
+/* End New: Header Styling */
+
 
 .list {
   display: flex;
@@ -188,6 +248,20 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   text-align: left;
 }
 
+/* NEW: Favorite Heart Icon in Modal */
+.favorite-icon {
+  cursor: pointer;
+  color: #fff; /* Default color */
+  font-size: 1.2em;
+  margin-left: 10px;
+  transition: color 0.2s;
+  vertical-align: middle;
+}
+
+.favorite-icon.active {
+  color: red; /* Color when favorited */
+}
+
 .stars { color: gold; }
 .close {
   position: absolute;
@@ -256,7 +330,7 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   text-overflow: ellipsis;
 }
 
-.search-modal {
+.search-modal { /* Reused for full-view-modal */
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
@@ -277,6 +351,11 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   border: none;
   margin-bottom: 20px;
   font-size: 16px;
+}
+
+.search-modal h2 { /* Styling for the full-view title */
+    color: #fff;
+    margin-bottom: 20px;
 }
 
 .search-modal .results {
@@ -309,6 +388,65 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   font-size: 30px;
 }
 
+/* NEW: Filter Modal Styling */
+.filter-modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+}
+
+.filter-content {
+  background: #222;
+  padding: 30px;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 10px;
+  color: #fff;
+  position: relative;
+  text-align: left;
+}
+
+.filter-content label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: red;
+}
+
+.filter-content select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 5px;
+}
+
+.filter-content button {
+  width: 100%;
+  padding: 10px;
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  margin-top: 10px;
+  transition: background 0.2s;
+}
+
+.filter-content button:hover {
+    background: #ff4d4d;
+}
+/* END NEW: Filter Modal Styling */
+
+
 /* MOBILE DISPLAY START */
 @media (max-width: 768px) {
   .navbar {
@@ -336,6 +474,17 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
     position: absolute;
     top: 10px;
     right: 10px;
+  }
+  
+  .row-header {
+      flex-direction: column;
+      align-items: flex-start;
+  }
+  
+  .row-header div {
+      display: flex; 
+      align-items: center;
+      margin-top: 10px;
   }
 
   .banner {
