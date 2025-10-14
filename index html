@@ -31,7 +31,14 @@
       <div class="dots" id="dots"></div>
     </div>
   </div>
-
+  
+  <div class="row link-slideshow-container">
+    <div class="row-header" style="margin-bottom: 5px;">
+        <h2>Featured Deals</h2>
+    </div>
+    <div class="list" id="shopee-link-list">
+        </div>
+  </div>
   <div class="list-container-no-header">
     <div class="row-header">
         <h2>Your Favorites <span style="font-size: 0.8em; color: #aaa;" id="favorites-count"></span></h2>
