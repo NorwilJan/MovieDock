@@ -32,40 +32,120 @@
     </div>
   </div>
 
-  <div class="row">
-    <h2>Trending Movies</h2>
+  <div class="list-container-no-header">
+    <div class="row-header">
+        <h2>Your Favorites <span style="font-size: 0.8em; color: #aaa;" id="favorites-count"></span></h2>
+    </div>
+    <div class="list" id="favorites-list">
+        <p style="color: #ccc; padding: 10px; width: 100%;">Add movies or shows to your favorites by clicking the heart icon in the details window.</p>
+    </div>
+  </div>
+
+  <div class="row" id="movies-row">
+    <div class="row-header">
+        <h2>Trending Movies</h2>
+        <div>
+            <button class="filter-btn" data-category="movies"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn clear-filter-btn" data-category="movies" style="display: none;">
+                <i class="fas fa-times"></i> Clear
+            </button>
+            <a href="#" class="show-more-link" data-category="movies">Show More &raquo;</a>
+        </div>
+    </div>
     <div class="list" id="movies-list"></div>
   </div>
 
-  <div class="row">
-    <h2>Trending TV Shows</h2>
+  <div class="row" id="tvshows-row">
+    <div class="row-header">
+        <h2>Trending TV Shows</h2>
+        <div>
+            <button class="filter-btn" data-category="tvshows"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn clear-filter-btn" data-category="tvshows" style="display: none;">
+                <i class="fas fa-times"></i> Clear
+            </button>
+            <a href="#" class="show-more-link" data-category="tvshows">Show More &raquo;</a>
+        </div>
+    </div>
     <div class="list" id="tvshows-list"></div>
   </div>
 
-  <div class="row">
-    <h2>Trending Anime</h2>
+  <div class="row" id="anime-row">
+    <div class="row-header">
+        <h2>Trending Anime</h2>
+        <div>
+            <button class="filter-btn" data-category="anime"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn clear-filter-btn" data-category="anime" style="display: none;">
+                <i class="fas fa-times"></i> Clear
+            </button>
+            <a href="#" class="show-more-link" data-category="anime">Show More &raquo;</a>
+        </div>
+    </div>
     <div class="list" id="anime-list"></div>
   </div>
 
-  <div class="row">
-    <h2>Trending Tagalog Movies</h2>
+  <div class="row" id="tagalog-movies-row">
+    <div class="row-header">
+        <h2>Trending Tagalog Movies</h2>
+        <div>
+            <button class="filter-btn" data-category="tagalog-movies"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn clear-filter-btn" data-category="tagalog-movies" style="display: none;">
+                <i class="fas fa-times"></i> Clear
+            </button>
+            <a href="#" class="show-more-link" data-category="tagalog-movies">Show More &raquo;</a>
+        </div>
+    </div>
     <div class="list" id="tagalog-movies-list"></div>
   </div>
 
-  <div class="row">
-    <h2>Trending Netflix Movies</h2>
+  <div class="row" id="netflix-movies-row">
+    <div class="row-header">
+        <h2>Trending Netflix Movies</h2>
+        <div>
+            <button class="filter-btn" data-category="netflix-movies"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn clear-filter-btn" data-category="netflix-movies" style="display: none;">
+                <i class="fas fa-times"></i> Clear
+            </button>
+            <a href="#" class="show-more-link" data-category="netflix-movies">Show More &raquo;</a>
+        </div>
+    </div>
     <div class="list" id="netflix-movies-list"></div>
   </div>
 
-  <div class="row">
-    <h2>Trending Netflix TV Shows</h2>
+  <div class="row" id="netflix-tv-row">
+    <div class="row-header">
+        <h2>Trending Netflix TV Shows</h2>
+        <div>
+            <button class="filter-btn" data-category="netflix-tv"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn clear-filter-btn" data-category="netflix-tv" style="display: none;">
+                <i class="fas fa-times"></i> Clear
+            </button>
+            <a href="#" class="show-more-link" data-category="netflix-tv">Show More &raquo;</a>
+        </div>
+    </div>
     <div class="list" id="netflix-tv-list"></div>
   </div>
 
-  <div class="row">
-    <h2>Trending Korean Drama</h2>
+  <div class="row" id="korean-drama-row">
+    <div class="row-header">
+        <h2>Trending Korean Drama</h2>
+        <div>
+            <button class="filter-btn" data-category="korean-drama"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn clear-filter-btn" data-category="korean-drama" style="display: none;">
+                <i class="fas fa-times"></i> Clear
+            </button>
+            <a href="#" class="show-more-link" data-category="korean-drama">Show More &raquo;</a>
+        </div>
+    </div>
     <div class="list" id="korean-drama-list"></div>
   </div>
+  
+  <div class="list-container-no-header">
+    <h2>Recently Viewed</h2>
+    <div class="list" id="recently-viewed-list">
+        <p style="color: #ccc; padding: 10px; width: 100%;">Your recently viewed items will appear here.</p>
+    </div>
+  </div>
+  
   <div id="empty-message" style="display: none; text-align: center; color: #ccc; padding: 20px;">Loading content...</div>
 
   <div class="modal" id="modal">
@@ -74,7 +154,10 @@
       <div class="modal-body">
         <img id="modal-image" src="" alt="" />
         <div class="modal-text">
-          <h2 id="modal-title"></h2>
+          <h2 id="modal-title">
+            <span id="modal-item-title"></span>
+            <i class="fas fa-heart favorite-icon" id="favorite-toggle"></i>
+          </h2>
           <div class="stars" id="modal-rating"></div>
           <p id="modal-description"></p>
         </div>
@@ -100,6 +183,26 @@
     <span class="close" onclick="closeSearchModal()" style="color: red;">&times;</span>
     <input type="text" id="search-input" placeholder="Search for a movie or show..." onkeyup="debouncedSearchTMDB()" />
     <div class="results" id="search-results"></div>
+  </div>
+  
+  <div class="filter-modal" id="filter-modal">
+    <div class="filter-content">
+        <span class="close" onclick="document.getElementById('filter-modal').style.display='none';" style="color: red;">&times;</span>
+        <h2 id="filter-modal-title">Filter Content</h2>
+        <p>Apply filters to start a new search list.</p>
+        
+        <label for="filter-year">Select Year:</label>
+        <select id="filter-year">
+            <option value="">Any Year</option>
+        </select>
+
+        <label for="filter-genre">Select Genre:</label>
+        <select id="filter-genre">
+            <option value="">Any Genre</option>
+        </select>
+        
+        <button onclick="applyFilters()">Apply Filters and Show More</button>
+    </div>
   </div>
 
   <footer class="footer">
