@@ -247,6 +247,57 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   z-index: 2;
 }
 
+/* === NEW: Skeleton Loading Effect === */
+.skeleton {
+  background: #333; /* Dark gray placeholder color */
+  position: relative;
+  overflow: hidden;
+}
+
+/* Optional: Subtle animation for the loading effect */
+.skeleton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.3) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Apply skeleton dimensions to list images and links before they load */
+.list.loading-list img, .list.loading-list a img, .list.loading-list a {
+  width: 150px;
+  height: 225px;
+  border-radius: 5px;
+  background: #333; /* Fallback background for skeleton */
+}
+
+.list.loading-list .skeleton {
+    min-width: 150px;
+    height: 225px;
+    margin-right: 10px;
+    border-radius: 5px;
+    /* Ensure skeleton placeholders are clickable/linkable targets */
+    display: inline-block; 
+}
+/* === END NEW: Skeleton Loading Effect === */
+
+
 .modal {
   position: fixed;
   top: 0; left: 0;
@@ -288,7 +339,7 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   text-align: left;
 }
 
-/* NEW: Favorite Heart Icon in Modal */
+/* NEW: User Rating and Favorite Heart Icon in Modal */
 .favorite-icon {
   cursor: pointer;
   color: #fff; /* Default color */
@@ -302,7 +353,15 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   color: red; /* Color when favorited */
 }
 
+/* Styling for the user-rateable stars */
+.user-star {
+    cursor: pointer;
+    color: gold;
+    font-size: 1.2em;
+    margin-right: 2px;
+}
 .stars { color: gold; }
+
 .close {
   position: absolute;
   top: 10px; right: 20px;
@@ -310,7 +369,16 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   font-size: 24px;
 }
 
-.server-selector, .season-selector {
+/* UPDATED: Server selector to support the Save Default button */
+.server-selector {
+  margin: 15px 0;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap; /* Allow wrap on small screens */
+}
+
+.season-selector {
   margin: 15px 0;
   text-align: left;
 }
@@ -373,14 +441,15 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
 .search-modal { /* Reused for full-view-modal */
   position: fixed;
   top: 0; left: 0;
-  width: 100%; height: 100%;
+  width: 100vw; /* Using 100vw/100vh for guaranteed full screen */
+  height: 100vh;
   background: rgba(0, 0, 0, 0.9);
   display: none;
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
   padding-top: 50px;
-  z-index: 15;
+  z-index: 9999; /* Higher z-index to cover everything */
 }
 
 .search-modal input {
@@ -486,6 +555,33 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
 }
 /* END NEW: Filter Modal Styling */
 
+/* NEW: Styles for the Full View Modal Controls */
+.full-view-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 5%;
+    width: 100%;
+    max-width: 800px; /* Align with results max-width */
+}
+
+.full-view-controls label {
+    font-weight: bold;
+    color: red;
+    white-space: nowrap;
+}
+
+.full-view-controls select {
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+    background: #333;
+    color: #fff;
+    min-width: 150px;
+    flex-grow: 1;
+}
+
 
 /* MOBILE DISPLAY START */
 @media (max-width: 768px) {
@@ -521,10 +617,50 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
       align-items: flex-start;
   }
   
+  /* NEW: Adjust button size and text for small screens */
   .row-header div {
+      /* Keep existing flex/center */
       display: flex; 
       align-items: center;
       margin-top: 10px;
+  }
+  
+  .filter-btn {
+      /* Make the button smaller and hide text, showing only icon */
+      padding: 5px 8px; /* Compact padding */
+      font-size: 0.8em;
+      text-indent: -9999px;
+      line-height: 0;
+      width: 35px; /* Fixed width for icon */
+      overflow: hidden;
+      position: relative;
+  }
+
+  .filter-btn i {
+      /* Bring the icon back into view */
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-indent: 0;
+      font-size: 1.2em;
+  }
+  
+  /* Ensure Clear button is also compact */
+  .clear-filter-btn {
+      width: 35px;
+  }
+  
+  /* Show More link adjustment */
+  .show-more-link {
+      font-size: 0.85em;
+  }
+  /* END NEW MOBILE BUTTON ADJUSTMENTS */
+  
+  /* Server selector wrap for small screens */
+  .server-selector label, .server-selector select, .server-selector button {
+      margin-top: 5px; 
+      margin-left: 0 !important; /* Override inline style on button */
   }
 
   .banner {
@@ -574,6 +710,17 @@ body { font-family: Arial, sans-serif; background: #111; color: #fff; }
   .search-modal input {
     margin-top: 0;
   }
+}
+
+@media (max-width: 500px) {
+    .full-view-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    .full-view-controls select {
+        width: 100%;
+    }
 }
 
 @media (max-width: 480px) {
