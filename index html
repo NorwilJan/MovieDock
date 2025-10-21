@@ -36,15 +36,18 @@
     <div class="row-header" style="margin-bottom: 5px;">
         <h2>Featured Deals</h2>
     </div>
-    <div class="list" id="shopee-link-list">
-        </div>
+    <div class="list loading-list" id="shopee-link-list">
+        <a href="#"><div class="skeleton"></div></a>
+        <a href="#"><div class="skeleton"></div></a>
+        <a href="#"><div class="skeleton"></div></a>
+    </div>
   </div>
   <div class="list-container-no-header">
     <div class="row-header">
         <h2>Your Favorites <span style="font-size: 0.8em; color: #aaa;" id="favorites-count"></span></h2>
     </div>
-    <div class="list" id="favorites-list">
-        <p style="color: #ccc; padding: 10px; width: 100%;">Add movies or shows to your favorites by clicking the heart icon in the details window.</p>
+    <div class="list loading-list" id="favorites-list">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
     </div>
   </div>
 
@@ -52,104 +55,126 @@
     <div class="row-header">
         <h2>Trending Movies</h2>
         <div>
-            <button class="filter-btn" data-category="movies"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn" data-category="movies"><i class="fas fa-filter"></i></button>
             <button class="filter-btn clear-filter-btn" data-category="movies" style="display: none;">
-                <i class="fas fa-times"></i> Clear
+                <i class="fas fa-times"></i>
             </button>
             <a href="#" class="show-more-link" data-category="movies">Show More &raquo;</a>
         </div>
     </div>
-    <div class="list" id="movies-list"></div>
+    <div class="list loading-list" id="movies-list">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        <div class="skeleton"></div><div class="skeleton"></div>
+    </div>
   </div>
 
   <div class="row" id="tvshows-row">
     <div class="row-header">
         <h2>Trending TV Shows</h2>
         <div>
-            <button class="filter-btn" data-category="tvshows"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn" data-category="tvshows"><i class="fas fa-filter"></i></button>
             <button class="filter-btn clear-filter-btn" data-category="tvshows" style="display: none;">
-                <i class="fas fa-times"></i> Clear
+                <i class="fas fa-times"></i>
             </button>
             <a href="#" class="show-more-link" data-category="tvshows">Show More &raquo;</a>
         </div>
     </div>
-    <div class="list" id="tvshows-list"></div>
+    <div class="list loading-list" id="tvshows-list">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        <div class="skeleton"></div><div class="skeleton"></div>
+    </div>
   </div>
 
   <div class="row" id="anime-row">
     <div class="row-header">
         <h2>Trending Anime</h2>
         <div>
-            <button class="filter-btn" data-category="anime"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn" data-category="anime"><i class="fas fa-filter"></i></button>
             <button class="filter-btn clear-filter-btn" data-category="anime" style="display: none;">
-                <i class="fas fa-times"></i> Clear
+                <i class="fas fa-times"></i>
             </button>
             <a href="#" class="show-more-link" data-category="anime">Show More &raquo;</a>
         </div>
     </div>
-    <div class="list" id="anime-list"></div>
+    <div class="list loading-list" id="anime-list">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        <div class="skeleton"></div><div class="skeleton"></div>
+    </div>
   </div>
 
   <div class="row" id="tagalog-movies-row">
     <div class="row-header">
         <h2>Trending Tagalog Movies</h2>
         <div>
-            <button class="filter-btn" data-category="tagalog-movies"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn" data-category="tagalog-movies"><i class="fas fa-filter"></i></button>
             <button class="filter-btn clear-filter-btn" data-category="tagalog-movies" style="display: none;">
-                <i class="fas fa-times"></i> Clear
+                <i class="fas fa-times"></i>
             </button>
             <a href="#" class="show-more-link" data-category="tagalog-movies">Show More &raquo;</a>
         </div>
     </div>
-    <div class="list" id="tagalog-movies-list"></div>
+    <div class="list loading-list" id="tagalog-movies-list">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        <div class="skeleton"></div><div class="skeleton"></div>
+    </div>
   </div>
 
   <div class="row" id="netflix-movies-row">
     <div class="row-header">
         <h2>Trending Netflix Movies</h2>
         <div>
-            <button class="filter-btn" data-category="netflix-movies"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn" data-category="netflix-movies"><i class="fas fa-filter"></i></button>
             <button class="filter-btn clear-filter-btn" data-category="netflix-movies" style="display: none;">
-                <i class="fas fa-times"></i> Clear
+                <i class="fas fa-times"></i>
             </button>
             <a href="#" class="show-more-link" data-category="netflix-movies">Show More &raquo;</a>
         </div>
     </div>
-    <div class="list" id="netflix-movies-list"></div>
+    <div class="list loading-list" id="netflix-movies-list">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        <div class="skeleton"></div><div class="skeleton"></div>
+    </div>
   </div>
 
   <div class="row" id="netflix-tv-row">
     <div class="row-header">
         <h2>Trending Netflix TV Shows</h2>
         <div>
-            <button class="filter-btn" data-category="netflix-tv"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn" data-category="netflix-tv"><i class="fas fa-filter"></i></button>
             <button class="filter-btn clear-filter-btn" data-category="netflix-tv" style="display: none;">
-                <i class="fas fa-times"></i> Clear
+                <i class="fas fa-times"></i>
             </button>
             <a href="#" class="show-more-link" data-category="netflix-tv">Show More &raquo;</a>
         </div>
     </div>
-    <div class="list" id="netflix-tv-list"></div>
+    <div class="list loading-list" id="netflix-tv-list">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        <div class="skeleton"></div><div class="skeleton"></div>
+    </div>
   </div>
 
   <div class="row" id="korean-drama-row">
     <div class="row-header">
         <h2>Trending Korean Drama</h2>
         <div>
-            <button class="filter-btn" data-category="korean-drama"><i class="fas fa-filter"></i> Filter</button>
+            <button class="filter-btn" data-category="korean-drama"><i class="fas fa-filter"></i></button>
             <button class="filter-btn clear-filter-btn" data-category="korean-drama" style="display: none;">
-                <i class="fas fa-times"></i> Clear
+                <i class="fas fa-times"></i>
             </button>
             <a href="#" class="show-more-link" data-category="korean-drama">Show More &raquo;</a>
         </div>
     </div>
-    <div class="list" id="korean-drama-list"></div>
+    <div class="list loading-list" id="korean-drama-list">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        <div class="skeleton"></div><div class="skeleton"></div>
+    </div>
   </div>
   
   <div class="list-container-no-header">
     <h2>Recently Viewed</h2>
-    <div class="list" id="recently-viewed-list">
-        <p style="color: #ccc; padding: 10px; width: 100%;">Your recently viewed items will appear here.</p>
+    <div class="list loading-list" id="recently-viewed-list">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        <div class="skeleton"></div><div class="skeleton"></div>
     </div>
   </div>
   
@@ -165,7 +190,19 @@
             <span id="modal-item-title"></span>
             <i class="fas fa-heart favorite-icon" id="favorite-toggle"></i>
           </h2>
-          <div class="stars" id="modal-rating"></div>
+          
+          <div class="stars" id="modal-rating-tmdb"></div> 
+          
+          <div style="margin-top: 10px;">
+              <label style="color: red; font-weight: bold;">Your Rating:</label>
+              <div class="stars" id="modal-rating-user" data-rating="0">
+                  <i class="far fa-star user-star" data-value="1" onclick="setUserRating(1)"></i>
+                  <i class="far fa-star user-star" data-value="2" onclick="setUserRating(2)"></i>
+                  <i class="far fa-star user-star" data-value="3" onclick="setUserRating(3)"></i>
+                  <i class="far fa-star user-star" data-value="4" onclick="setUserRating(4)"></i>
+                  <i class="far fa-star user-star" data-value="5" onclick="setUserRating(5)"></i>
+              </div>
+          </div>
           <p id="modal-description"></p>
         </div>
       </div>
@@ -176,6 +213,9 @@
           <option value="vidsrc.me">Vidsrc.me</option>
           <option value="player.videasy.net">Player.Videasy.net</option>
         </select>
+        <button onclick="saveDefaultServer()" style="background: #333; color: #fff; border: 1px solid #555; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+            <i class="fas fa-save"></i> Save as Default
+        </button>
       </div>
       <div class="season-selector" id="season-selector" style="display: none;">
         <label for="season">Select Season:</label>
