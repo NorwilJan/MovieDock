@@ -1,123 +1,542 @@
-const API_KEY = '40f1982842db35042e8561b13b38d492';
-    const BASE_URL = 'https://api.themoviedb.org/3';
-    const IMG_URL = 'https://image.tmdb.org/t/p/original';
-    let currentItem;
+/*
+    GOLD AI - XAUUSD SIGNAL DASHBOARD
 
-    async function fetchTrending(type) {
-      const res = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
-      const data = await res.json();
-      return data.results;
-    }
+    FRONTEND PROTOTYPE
 
-    async function fetchTrendingAnime() {
-  let allResults = [];
+    This file currently uses simulated market data.
 
-  // Fetch from multiple pages to get more anime (max 3 pages for demo)
-  for (let page = 1; page <= 3; page++) {
-    const res = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&page=${page}`);
-    const data = await res.json();
-    const filtered = data.results.filter(item =>
-      item.original_language === 'ja' && item.genre_ids.includes(16)
+    Later we will replace the simulated data with:
+
+        MT5
+          ↓
+        Python
+          ↓
+        FastAPI
+          ↓
+        This website
+*/
+
+
+let marketData = {
+
+    price: 3640.20,
+
+    h1Trend: "BULLISH",
+
+    m15Trend: "BULLISH",
+
+    rsi: 57.8,
+
+    atr: 6.2,
+
+    ema50: 3642.10,
+
+    ema200: 3628.40,
+
+    support: 3635.00,
+
+    resistance: 3660.00
+
+};
+
+
+/*
+========================================
+FORMAT PRICE
+========================================
+*/
+
+function formatPrice(value) {
+
+    return Number(value).toLocaleString(
+        "en-US",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
     );
-    allResults = allResults.concat(filtered);
-  }
 
-  return allResults;
 }
 
 
-    function displayBanner(item) {
-      document.getElementById('banner').style.backgroundImage = `url(${IMG_URL}${item.backdrop_path})`;
-      document.getElementById('banner-title').textContent = item.title || item.name;
+/*
+========================================
+UPDATE MARKET DATA
+========================================
+*/
+
+function updateMarketDisplay() {
+
+    document.getElementById("currentPrice")
+        .textContent = formatPrice(marketData.price);
+
+    document.getElementById("levelPrice")
+        .textContent = "$" + formatPrice(marketData.price);
+
+
+    document.getElementById("h1Trend")
+        .textContent = marketData.h1Trend;
+
+
+    document.getElementById("m15Trend")
+        .textContent = marketData.m15Trend;
+
+
+    document.getElementById("rsi")
+        .textContent = marketData.rsi;
+
+
+    document.getElementById("atr")
+        .textContent = marketData.atr;
+
+
+    document.getElementById("ema50")
+        .textContent = formatPrice(marketData.ema50);
+
+
+    document.getElementById("ema200")
+        .textContent = formatPrice(marketData.ema200);
+
+
+    document.getElementById("support")
+        .textContent = "$" + formatPrice(marketData.support);
+
+
+    document.getElementById("resistance")
+        .textContent = "$" + formatPrice(marketData.resistance);
+
+}
+
+
+/*
+========================================
+GENERATE SIGNAL
+========================================
+
+THIS IS ONLY A DEMONSTRATION.
+
+It will later be replaced by our
+real strategy engine.
+*/
+
+function generateSignal() {
+
+    const price = marketData.price;
+
+    const bullishTrend =
+        marketData.h1Trend === "BULLISH" &&
+        marketData.m15Trend === "BULLISH";
+
+    const bearishTrend =
+        marketData.h1Trend === "BEARISH" &&
+        marketData.m15Trend === "BEARISH";
+
+
+    /*
+        BUY CONDITION
+
+        Price near support
+        + bullish trend
+        + RSI above 50
+    */
+
+    const nearSupport =
+        price <= marketData.support + 8;
+
+
+    const nearResistance =
+        price >= marketData.resistance - 8;
+
+
+    if (
+        bullishTrend &&
+        nearSupport &&
+        marketData.rsi > 50
+    ) {
+
+        return createBuySignal();
+
     }
 
-    function displayList(items, containerId) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = '';
-      items.forEach(item => {
-        const img = document.createElement('img');
-        img.src = `${IMG_URL}${item.poster_path}`;
-        img.alt = item.title || item.name;
-        img.onclick = () => showDetails(item);
-        container.appendChild(img);
-      });
+
+    if (
+        bearishTrend &&
+        nearResistance &&
+        marketData.rsi < 50
+    ) {
+
+        return createSellSignal();
+
     }
 
-    function showDetails(item) {
-      currentItem = item;
-      document.getElementById('modal-title').textContent = item.title || item.name;
-      document.getElementById('modal-description').textContent = item.overview;
-      document.getElementById('modal-image').src = `${IMG_URL}${item.poster_path}`;
-      document.getElementById('modal-rating').innerHTML = '★'.repeat(Math.round(item.vote_average / 2));
-      changeServer();
-      document.getElementById('modal').style.display = 'flex';
+
+    return createWaitSignal();
+
+}
+
+
+/*
+========================================
+BUY SIGNAL
+========================================
+*/
+
+function createBuySignal() {
+
+    const entry = marketData.price;
+
+    const stopLoss =
+        marketData.support - 4;
+
+    const risk =
+        entry - stopLoss;
+
+    const takeProfit1 =
+        entry + risk * 2;
+
+    const takeProfit2 =
+        entry + risk * 3;
+
+
+    return {
+
+        type: "BUY",
+
+        entry: entry,
+
+        stopLoss: stopLoss,
+
+        tp1: takeProfit1,
+
+        tp2: takeProfit2,
+
+        riskReward: "1 : 2",
+
+        quality: "MODERATE",
+
+        description:
+            "Bullish higher-timeframe structure with price reacting near support.",
+
+        aiTitle:
+            "Potential bullish setup",
+
+        aiExplanation:
+            "The market is showing bullish structure on H1 and M15. Price is near the identified support zone and RSI is above 50, suggesting positive momentum. Confirmation is still required before entering."
+
+    };
+
+}
+
+
+/*
+========================================
+SELL SIGNAL
+========================================
+*/
+
+function createSellSignal() {
+
+    const entry = marketData.price;
+
+    const stopLoss =
+        marketData.resistance + 4;
+
+    const risk =
+        stopLoss - entry;
+
+    const takeProfit1 =
+        entry - risk * 2;
+
+    const takeProfit2 =
+        entry - risk * 3;
+
+
+    return {
+
+        type: "SELL",
+
+        entry: entry,
+
+        stopLoss: stopLoss,
+
+        tp1: takeProfit1,
+
+        tp2: takeProfit2,
+
+        riskReward: "1 : 2",
+
+        quality: "MODERATE",
+
+        description:
+            "Bearish higher-timeframe structure with price reacting near resistance.",
+
+        aiTitle:
+            "Potential bearish setup",
+
+        aiExplanation:
+            "The market is showing bearish structure on H1 and M15. Price is near resistance and RSI is below 50, suggesting negative momentum. Confirmation is still required before entering."
+
+    };
+
+}
+
+
+/*
+========================================
+WAIT SIGNAL
+========================================
+*/
+
+function createWaitSignal() {
+
+    return {
+
+        type: "WAIT",
+
+        entry: null,
+
+        stopLoss: null,
+
+        tp1: null,
+
+        tp2: null,
+
+        riskReward: "--",
+
+        quality: "NO SETUP",
+
+        description:
+            "No high-quality setup is currently confirmed.",
+
+        aiTitle:
+            "Waiting for confirmation",
+
+        aiExplanation:
+            "The current market conditions do not meet enough of the strategy requirements. The system will continue monitoring XAUUSD rather than forcing a trade."
+
+    };
+
+}
+
+
+/*
+========================================
+DISPLAY SIGNAL
+========================================
+*/
+
+function displaySignal(signal) {
+
+    const signalText =
+        document.getElementById("signalText");
+
+    const signalIcon =
+        document.getElementById("signalIcon");
+
+
+    signalText.textContent =
+        signal.type;
+
+
+    document.getElementById("signalDescription")
+        .textContent =
+        signal.description;
+
+
+    document.getElementById("confidence")
+        .textContent =
+        signal.quality;
+
+
+    document.getElementById("entryPrice")
+        .textContent =
+        signal.entry
+            ? "$" + formatPrice(signal.entry)
+            : "--";
+
+
+    document.getElementById("stopLoss")
+        .textContent =
+        signal.stopLoss
+            ? "$" + formatPrice(signal.stopLoss)
+            : "--";
+
+
+    document.getElementById("takeProfit1")
+        .textContent =
+        signal.tp1
+            ? "$" + formatPrice(signal.tp1)
+            : "--";
+
+
+    document.getElementById("takeProfit2")
+        .textContent =
+        signal.tp2
+            ? "$" + formatPrice(signal.tp2)
+            : "--";
+
+
+    document.getElementById("riskReward")
+        .textContent =
+        signal.riskReward;
+
+
+    document.getElementById("aiTitle")
+        .textContent =
+        signal.aiTitle;
+
+
+    document.getElementById("aiExplanation")
+        .textContent =
+        signal.aiExplanation;
+
+
+    /*
+        Change signal color
+    */
+
+    if (signal.type === "BUY") {
+
+        signalText.style.color =
+            "#22c55e";
+
+        signalIcon.style.color =
+            "#22c55e";
+
     }
 
-    function changeServer() {
-      const server = document.getElementById('server').value;
-      const type = currentItem.media_type === "movie" ? "movie" : "tv";
-      let embedURL = "";
+    else if (signal.type === "SELL") {
 
-      if (server === "vidsrc.cc") {
-        embedURL = `https://vidsrc.cc/v2/embed/${type}/${currentItem.id}`;
-      } else if (server === "vidsrc.me") {
-        embedURL = `https://vidsrc.net/embed/${type}/?tmdb=${currentItem.id}`;
-      } else if (server === "player.videasy.net") {
-        embedURL = `https://player.videasy.net/${type}/${currentItem.id}`;
-      }
+        signalText.style.color =
+            "#ef4444";
 
-      document.getElementById('modal-video').src = embedURL;
+        signalIcon.style.color =
+            "#ef4444";
+
     }
 
-    function closeModal() {
-      document.getElementById('modal').style.display = 'none';
-      document.getElementById('modal-video').src = '';
+    else {
+
+        signalText.style.color =
+            "#f59e0b";
+
+        signalIcon.style.color =
+            "#f59e0b";
+
     }
 
-    function openSearchModal() {
-      document.getElementById('search-modal').style.display = 'flex';
-      document.getElementById('search-input').focus();
-    }
+}
 
-    function closeSearchModal() {
-      document.getElementById('search-modal').style.display = 'none';
-      document.getElementById('search-results').innerHTML = '';
-    }
 
-    async function searchTMDB() {
-      const query = document.getElementById('search-input').value;
-      if (!query.trim()) {
-        document.getElementById('search-results').innerHTML = '';
+/*
+========================================
+REFRESH SIGNAL
+========================================
+*/
+
+function refreshSignal() {
+
+    /*
+        Simulate a small price movement.
+
+        THIS WILL LATER BE REPLACED BY
+        REAL MT5 DATA.
+    */
+
+    const movement =
+        (Math.random() - 0.5) * 4;
+
+
+    marketData.price += movement;
+
+
+    updateMarketDisplay();
+
+
+    const signal =
+        generateSignal();
+
+
+    displaySignal(signal);
+
+}
+
+
+/*
+========================================
+DEMO TRADE
+========================================
+*/
+
+function demoTrade() {
+
+    const signal =
+        generateSignal();
+
+
+    if (signal.type === "WAIT") {
+
+        alert(
+            "No confirmed setup.\n\n" +
+            "The system recommends WAIT."
+        );
+
         return;
-      }
 
-      const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&query=${query}`);
-      const data = await res.json();
-
-      const container = document.getElementById('search-results');
-      container.innerHTML = '';
-      data.results.forEach(item => {
-        if (!item.poster_path) return;
-        const img = document.createElement('img');
-        img.src = `${IMG_URL}${item.poster_path}`;
-        img.alt = item.title || item.name;
-        img.onclick = () => {
-          closeSearchModal();
-          showDetails(item);
-        };
-        container.appendChild(img);
-      });
     }
 
-    async function init() {
-      const movies = await fetchTrending('movie');
-      const tvShows = await fetchTrending('tv');
-      const anime = await fetchTrendingAnime();
 
-      displayBanner(movies[Math.floor(Math.random() * movies.length)]);
-      displayList(movies, 'movies-list');
-      displayList(tvShows, 'tvshows-list');
-      displayList(anime, 'anime-list');
-    }
+    alert(
 
-    init();
+        "DEMO TRADE\n\n" +
+
+        "Signal: " +
+        signal.type +
+
+        "\nEntry: $" +
+        formatPrice(signal.entry) +
+
+        "\nStop Loss: $" +
+        formatPrice(signal.stopLoss) +
+
+        "\nTP1: $" +
+        formatPrice(signal.tp1) +
+
+        "\nTP2: $" +
+        formatPrice(signal.tp2) +
+
+        "\n\nThis is only a simulated trade."
+
+    );
+
+}
+
+
+/*
+========================================
+INITIALIZE
+========================================
+*/
+
+function initialize() {
+
+    updateMarketDisplay();
+
+    const signal =
+        generateSignal();
+
+    displaySignal(signal);
+
+}
+
+
+/*
+========================================
+START APP
+========================================
+*/
+
+document.addEventListener(
+    "DOMContentLoaded",
+    initialize
+);
